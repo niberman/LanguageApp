@@ -1,0 +1,295 @@
+Project: The Language School – “Let’s Start Talking!” (Web App MVP)
+Goal: Ship a production-ready bilingual (EN/ES) web app that drives daily practice and retention using our curriculum. Prioritize speed, simplicity, and clean code that I can iterate on.
+
+1) Scope (MVP – Phase 1)
+
+Build a full-stack app with these modules:
+
+Practice
+
+Level selector for: English Foundations (1–17) and Spanish Foundations (1–12).
+
+Each level page shows:
+
+Embedded Quizlet set(s) (placeholder IDs in config).
+
+Embedded YouTube lesson(s) (playlist IDs in config).
+
+Progress tracking: mark vocab set “viewed” and video “watched”; store simple counters & timestamps per user.
+
+Auth
+
+Sign up / Sign in with Email + Password and Google.
+
+Dashboard
+
+Shows streak, last activity, % level completion, and “Next Suggested Action”.
+
+Settings
+
+Toggle English ↔ Español UI language.
+
+Pricing (Freemium placeholder)
+
+Free tier: Practice (Quizlet + YouTube).
+
+Paid tiers: placeholders only (no paywall yet). Add a “Coming soon” upsell.
+
+Admin (basic)
+
+Simple admin page to:
+
+Add/Edit levels and their Quizlet/YouTube IDs.
+
+View active users and last activity.
+
+Phase 2 (not building now, leave stub routes/components):
+AI Conversation Partner, Social/Events (Meetup), Work (Uber referral).
+
+2) Tech Stack & Project Setup
+
+Frontend: Next.js (App Router) + React + TypeScript + TailwindCSS.
+
+State: React Query (server state) + Zod for validation.
+
+Backend: Next.js API routes.
+
+DB & Auth: Supabase (preferred for speed) or Firebase (if you insist) — choose Supabase here.
+
+i18n: next-intl or react-intl with JSON message catalogs.
+
+Styling: Tailwind; clean, accessible UI.
+
+Icons: lucide-react.
+
+Env/Secrets: Use Replit Secrets.
+
+Create as a monorepo-style Next.js app in one workspace.
+
+3) Branding & UX
+
+Name in header: The Language School
+
+Tagline subheader: “Let’s Start Talking! / ¡Empecemos a hablar!”
+
+Clean, mobile-first layout, card-based UI, large tap targets.
+
+Home page CTA: “Start Practicing / Empezar a practicar”.
+
+Language switcher always visible in navbar.
+
+4) Data Model (Supabase)
+
+Create tables with RLS policies for per-user privacy:
+
+profiles
+
+id (uuid, pk, references auth.users)
+
+created_at (timestamptz)
+
+display_name (text)
+
+locale (text, default "en")
+
+levels
+
+id (uuid, pk)
+
+track (text enum: "english" | "spanish")
+
+number (int)
+
+title (text)
+
+quizlet_set_ids (text[])
+
+youtube_playlist_ids (text[])
+
+unique(track, number)
+
+progress_events
+
+id (uuid, pk)
+
+user_id (uuid, fk profiles.id)
+
+track (text)
+
+level_number (int)
+
+kind (text enum: "quizlet_view" | "video_watch")
+
+payload (jsonb)
+
+created_at (timestamptz default now())
+
+Derived/stats: compute streaks and completion % on the fly or with lightweight SQL views.
+
+5) Pages & Routes (Next.js – App Router)
+
+/ (Home): value prop, CTA, feature cards (Practice, Dashboard, Coming Soon).
+
+/practice (index): choose track (English/Spanish) → list levels with completion rings.
+
+/practice/[track]/[level]: embed Quizlet + YouTube, record progress on interactions.
+
+/dashboard: streak, last activity, recommended next step.
+
+/settings: locale toggle; profile name.
+
+/admin (protected by role): CRUD levels, view users.
+
+/pricing: freemium now, paid “Coming soon”.
+
+6) Embeds & Config
+
+Create a config file (e.g., src/config/content.ts) with placeholder arrays like:
+
+export const LEVELS = {
+  english: [
+    { number: 1, title: "Foundations 1", quizlet: ["QUIZLET_SET_ID_1"], youtube: ["YOUTUBE_PLAYLIST_ID_1"] },
+    // …
+  ],
+  spanish: [
+    { number: 1, title: "Fundamentos 1", quizlet: ["QUIZLET_SET_ID_ES_1"], youtube: ["YOUTUBE_PLAYLIST_ID_ES_1"] },
+    // …
+  ],
+};
+
+
+Admin edits should sync to DB; on first bootstrap, seed DB from this config if DB is empty.
+
+7) Internationalization (EN/ES)
+
+Use next-intl with en.json and es.json.
+
+All UI strings must be localized (nav items, buttons, empty states, errors).
+
+Default to user’s saved profiles.locale if available; else browser locale fallback: en.
+
+8) Auth & Security
+
+Supabase Auth: Email/Password + Google OAuth.
+
+RLS policies: progress_events.user_id = auth.uid(), profiles.id = auth.uid().
+
+Admin role: use Supabase JWT custom claim role = 'admin' (manual assignment for now). Gate /admin server-side.
+
+9) Telemetry & Quality
+
+Add basic server logging (simple console on API routes).
+
+Type-safe API handlers with Zod validation.
+
+Error boundaries and toast notifications for failures.
+
+10) UI Requirements (Tailwind)
+
+Minimal, friendly cards; rounded-2xl; soft shadows; adequate spacing.
+
+Components: Navbar, Footer, LevelCard, StatCard, ProgressRing, EmbedFrame.
+
+Avoid custom colors; rely on Tailwind defaults for now.
+
+Accessible: semantic HTML, labels, focus states.
+
+11) Progress Tracking (no heavy analytics)
+
+When user clicks “Open Quizlet” → record quizlet_view.
+
+When YouTube player reaches 60% watch progress → record video_watch.
+
+Show “Completed X/Y for this level” + a simple streak (consecutive days with ≥1 event).
+
+12) Pricing (stub)
+
+/pricing page explains Free vs “Pro (coming soon)”: AI Conversation Partner, Events, Work opportunities.
+
+CTA to join free for now; newsletter capture field (store email in DB waitlist_emails).
+
+13) Developer Ergonomics
+
+Generate a README.md with:
+
+Setup (env, secrets, Supabase CLI link), dev commands, how to add levels, how to localize.
+
+“Future phases” notes: AI Chat, Meetup/Eventbrite, Uber referral.
+
+Provide clear file structure and comments.
+
+Include a seed script to load initial levels.
+
+14) Environment Variables (use Replit Secrets)
+
+NEXT_PUBLIC_SUPABASE_URL
+
+SUPABASE_SERVICE_ROLE (server-only, if needed for seeding)
+
+SUPABASE_ANON_KEY
+
+GOOGLE_OAUTH_CLIENT_ID
+
+GOOGLE_OAUTH_CLIENT_SECRET
+
+NEXT_PUBLIC_APP_URL
+
+(Optional) YOUTUBE_API_KEY if needed; prefer simple embeds first.
+
+(Optional) QUIZLET_SET_IDS_* if you want to keep sets out of repo.
+
+If any are missing, generate code that prompts me in the console with what to add.
+
+15) Acceptance Criteria
+
+App boots locally in Replit and builds without TypeScript errors.
+
+Auth works (email + Google).
+
+I can create a user, choose English → Level 1, open Quizlet embed and YouTube embed, and see my dashboard update with progress.
+
+Language toggle switches all text instantly and persists to profile.
+
+Admin can add/edit a level (no schema migration required beyond initial).
+
+README contains deployment steps.
+
+16) Deployment
+
+Provide Replit Deployment config (Node 20).
+
+Export a Dockerfile or Replit Nix config as needed.
+
+Include instructions in README for domain mapping (e.g., practice.thelanguageschool.us) and Supabase URL settings.
+
+17) Nice-to-Haves (include stubs, not full features)
+
+/chat route placeholder for future AI Conversation Partner (disabled UI with copy that teases Pro tier).
+
+/events and /work placeholders with short explanatory copy and external links:
+
+Events: link to Denver Free Spanish Conversation Network (placeholder).
+
+Work: link to Uber referral https://drivers.uber.com/i/zqduauf.
+
+18) Design Copy (you can use this)
+
+Home hero headline: “Let’s Start Talking!”
+
+Subhead: “Practice every day. Connect with people. Unlock opportunities.”
+
+EN CTA: “Start Practicing” | ES CTA: “Empezar a practicar”
+
+Dashboard stat labels: “Streak”, “Last activity”, “Level progress”.
+
+Final Instructions to Replit
+
+Initialize the repo with the stack above and generate all pages, API routes, DB schema, RLS policies, and seed script.
+
+Scaffold localization with en.json and es.json and wrap the app with the i18n provider.
+
+Implement auth flows and protected routes (dashboard, admin).
+
+Embed Quizlet + YouTube with resilient iframes; add progress event hooks.
+
+Ship a working MVP meeting the acceptance criteria. If any credential is missing, print clear setup steps to the console and in README rather than blocking build.

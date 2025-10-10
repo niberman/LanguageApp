@@ -1,0 +1,79 @@
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+
+export default function Settings() {
+  const { t, locale, setLocale } = useLanguage();
+  const { toast } = useToast();
+  const [displayName, setDisplayName] = useState('John Doe'); //todo: remove mock functionality
+
+  const handleSave = () => {
+    //todo: remove mock functionality
+    toast({
+      title: 'Settings saved',
+      description: 'Your preferences have been updated',
+    });
+    console.log('Settings saved:', { displayName, locale });
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+
+      <main className="flex-1 py-12">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <h1 className="text-3xl md:text-4xl font-bold mb-8" data-testid="text-settings-title">
+            {t('settings.title')}
+          </h1>
+
+          <Card className="p-6">
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="displayName">{t('settings.profile')}</Label>
+                <Input
+                  id="displayName"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="mt-2"
+                  data-testid="input-display-name"
+                />
+              </div>
+
+              <div>
+                <Label>{t('settings.language')}</Label>
+                <div className="flex gap-4 mt-2">
+                  <Button
+                    variant={locale === 'en' ? 'default' : 'outline'}
+                    onClick={() => setLocale('en')}
+                    data-testid="button-language-en"
+                  >
+                    English
+                  </Button>
+                  <Button
+                    variant={locale === 'es' ? 'default' : 'outline'}
+                    onClick={() => setLocale('es')}
+                    data-testid="button-language-es"
+                  >
+                    Español
+                  </Button>
+                </div>
+              </div>
+
+              <Button onClick={handleSave} className="w-full" data-testid="button-save-settings">
+                {t('settings.save')}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

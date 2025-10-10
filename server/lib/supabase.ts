@@ -1,8 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Auto-detect and fix swapped URL and anon key
+if (supabaseUrl.startsWith('eyJ') && supabaseAnonKey.startsWith('http')) {
+  console.log('⚠️  Detected swapped Supabase URL and Anon Key - auto-fixing...');
+  [supabaseUrl, supabaseAnonKey] = [supabaseAnonKey, supabaseUrl];
+  console.log('✅ Fixed: URL and Anon Key are now in correct order');
+}
 
 // Validate Supabase configuration
 if (!supabaseUrl || !supabaseUrl.startsWith('http')) {
@@ -19,6 +26,8 @@ if (!supabaseAnonKey || !supabaseServiceKey) {
   console.error('❌ Missing Supabase keys. Please set all required secrets.');
   process.exit(1);
 }
+
+console.log('✅ Supabase configured:', supabaseUrl);
 
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {

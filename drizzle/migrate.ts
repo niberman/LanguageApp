@@ -10,7 +10,7 @@ const runMigration = async () => {
 
   console.log("⏳ Running migrations...");
 
-  await migrate(db, { migrationsFolder: "drizzle/migrations" });
+  await migrate(db, { migrationsFolder: "migrations" });
 
   console.log("✅ Migrations completed!");
 

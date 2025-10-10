@@ -4,17 +4,11 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Profiles table - extends Supabase auth.users
+// Note: id corresponds to Supabase auth.users.id (UUID)
 export const profiles = pgTable("profiles", {
-  id: uuid("id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey(), // No foreign key - Supabase manages auth
   displayName: text("display_name"),
   locale: text("locale").default("en").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Users table for authentication
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -54,11 +48,6 @@ export const insertProfileSchema = createInsertSchema(profiles).omit({
   createdAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertLevelSchema = createInsertSchema(levels).omit({
   id: true,
 });
@@ -76,9 +65,6 @@ export const insertWaitlistEmailSchema = createInsertSchema(waitlistEmails).omit
 // Types
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type Profile = typeof profiles.$inferSelect;
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 
 export type InsertLevel = z.infer<typeof insertLevelSchema>;
 export type Level = typeof levels.$inferSelect;

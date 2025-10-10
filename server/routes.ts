@@ -115,6 +115,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile routes
+  app.post("/api/profile", authenticateUser, async (req, res) => {
+    try {
+      const { id, displayName, locale } = req.body;
+      const profile = await storage.createProfile({
+        id: id || req.user.id,
+        displayName: displayName || req.user.email?.split('@')[0] || 'User',
+        locale: locale || 'en',
+      });
+      res.json(profile);
+    } catch (error: any) {
+      console.error('Create profile error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/profile", authenticateUser, async (req, res) => {
     try {
       const profile = await storage.getProfile(req.user.id);

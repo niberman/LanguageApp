@@ -67,8 +67,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    // Use client-side signup which creates both auth user and profile
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          display_name: email.split('@')[0],
+        }
+      }
+    });
     if (error) throw error;
+    
+    // Create profile in database
+    if (data.user) {
+      try {
+        const response = await fetch('/api/profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.session?.access_token}`
+          },
+          body: JSON.stringify({
+            id: data.user.id,
+            displayName: email.split('@')[0],
+            locale: 'en',
+          })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to create profile');
+        }
+      } catch (err) {
+        console.error('Profile creation error:', err);
+      }
+    }
   };
 
   const signOut = async () => {

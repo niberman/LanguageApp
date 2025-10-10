@@ -1,9 +1,13 @@
 import { useLocation, useRoute } from 'wouter';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { levelApi, progressApi } from '@/lib/api';
+import { queryClient } from '@/lib/queryClient';
 import EmbedFrame from '@/components/EmbedFrame';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,32 +16,57 @@ export default function LevelDetail() {
   const [, params] = useRoute('/practice/:track/:level');
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [quizletViewed, setQuizletViewed] = useState(false);
-  const [videoWatched, setVideoWatched] = useState(false);
+
+  const { data: level } = useQuery({
+    queryKey: ['/api/levels', params?.track, params?.level],
+    queryFn: () => levelApi.getLevel(params?.track || 'english', parseInt(params?.level || '1')),
+  });
+
+  const { data: progress } = useQuery({
+    queryKey: ['/api/progress', params?.track, params?.level],
+    queryFn: () => progressApi.getLevelProgress(params?.track || 'english', parseInt(params?.level || '1')),
+    enabled: !!user,
+  });
+
+  const recordProgress = useMutation({
+    mutationFn: (kind: string) =>
+      progressApi.create({
+        track: params?.track,
+        levelNumber: parseInt(params?.level || '1'),
+        kind,
+        payload: {},
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/progress'] });
+    },
+  });
 
   const handleQuizletView = () => {
-    setQuizletViewed(true);
-    //todo: remove mock functionality
-    toast({
-      title: 'Progress recorded',
-      description: 'Quizlet set opened',
-    });
-    console.log('Quizlet view recorded');
+    if (!user) {
+      toast({ title: 'Please sign in', description: 'Sign in to track your progress' });
+      setLocation('/auth');
+      return;
+    }
+    recordProgress.mutate('quizlet_view');
+    toast({ title: 'Progress recorded', description: 'Quizlet set opened' });
   };
 
   const handleVideoWatch = () => {
-    setVideoWatched(true);
-    //todo: remove mock functionality
-    toast({
-      title: 'Progress recorded',
-      description: 'Video lesson opened',
-    });
-    console.log('Video watch recorded');
+    if (!user) {
+      toast({ title: 'Please sign in', description: 'Sign in to track your progress' });
+      setLocation('/auth');
+      return;
+    }
+    recordProgress.mutate('video_watch');
+    toast({ title: 'Progress recorded', description: 'Video lesson opened' });
   };
 
   const trackTitle = params?.track === 'english' ? 'English' : 'Spanish';
-  const levelTitle = `${trackTitle} ${params?.track === 'english' ? 'Foundations' : 'Fundamentos'} ${params?.level}`;
+  const levelTitle = level?.title || `${trackTitle} Level ${params?.level}`;
+  const quizletId = level?.quizletSetIds?.[0] || 'placeholder';
+  const youtubeId = level?.youtubePlaylistIds?.[0] || 'placeholder';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -63,19 +92,19 @@ export default function LevelDetail() {
           <div className="space-y-6">
             <EmbedFrame
               type="quizlet"
-              embedUrl={`https://quizlet.com/${params?.track}-${params?.level}`}
+              embedUrl={`https://quizlet.com/${quizletId}`}
               title={t('level.openQuizlet')}
               onInteraction={handleQuizletView}
             />
 
             <EmbedFrame
               type="youtube"
-              embedUrl={`https://youtube.com/${params?.track}-${params?.level}`}
+              embedUrl={`https://youtube.com/playlist?list=${youtubeId}`}
               title={t('level.watchVideo')}
               onInteraction={handleVideoWatch}
             />
 
-            {quizletViewed && videoWatched && (
+            {progress?.quizletViewed && progress?.videoWatched && (
               <div className="text-center p-6 bg-chart-2/10 border border-chart-2/20 rounded-lg">
                 <p className="text-lg font-medium text-chart-2">
                   🎉 {t('level.completed')}!

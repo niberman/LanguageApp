@@ -1,21 +1,40 @@
+import { useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Flame, Clock, TrendingUp, Target } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { dashboardApi } from '@/lib/api';
 import StatCard from '@/components/StatCard';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'wouter';
 
 export default function Dashboard() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  //todo: remove mock functionality
-  const stats = {
-    streak: 7,
-    lastActivity: t('dashboard.today'),
-    progress: 45,
-    nextLevel: 3,
+  useEffect(() => {
+    if (!user) {
+      setLocation('/auth');
+    }
+  }, [user, setLocation]);
+
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['/api/dashboard/stats'],
+    queryFn: () => dashboardApi.getStats(),
+    enabled: !!user,
+  });
+
+  if (!user) return null;
+
+  const formatDate = (date: string | null) => {
+    if (!date) return 'Never';
+    const d = new Date(date);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) return t('dashboard.today');
+    return d.toLocaleDateString();
   };
 
   return (
@@ -28,45 +47,51 @@ export default function Dashboard() {
             {t('nav.dashboard')}
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard
-              icon={Flame}
-              label={t('dashboard.streak')}
-              value={`${stats.streak} ${t('dashboard.days')}`}
-              accentColor="warning"
-            />
-            <StatCard
-              icon={Clock}
-              label={t('dashboard.lastActivity')}
-              value={stats.lastActivity}
-              accentColor="success"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label={t('dashboard.progress')}
-              value={`${stats.progress}%`}
-              accentColor="primary"
-            />
-            <StatCard
-              icon={Target}
-              label={t('dashboard.nextAction')}
-              value={`Level ${stats.nextLevel}`}
-              accentColor="primary"
-            />
-          </div>
+          {isLoading ? (
+            <div className="text-center py-12">Loading dashboard...</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <StatCard
+                  icon={Flame}
+                  label={t('dashboard.streak')}
+                  value={`${stats?.streak || 0} ${t('dashboard.days')}`}
+                  accentColor="warning"
+                />
+                <StatCard
+                  icon={Clock}
+                  label={t('dashboard.lastActivity')}
+                  value={formatDate(stats?.lastActivity)}
+                  accentColor="success"
+                />
+                <StatCard
+                  icon={TrendingUp}
+                  label={t('dashboard.progress')}
+                  value={`${stats?.progressPercentage || 0}%`}
+                  accentColor="primary"
+                />
+                <StatCard
+                  icon={Target}
+                  label="Completed Levels"
+                  value={`${stats?.completedLevels || 0}/${stats?.totalLevels || 0}`}
+                  accentColor="primary"
+                />
+              </div>
 
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">
-              {t('dashboard.continue')} {stats.nextLevel}
-            </h2>
-            <Button
-              size="lg"
-              onClick={() => setLocation('/practice/english/3')}
-              data-testid="button-continue-level"
-            >
-              {t('practice.continue')}
-            </Button>
-          </div>
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">
+                  {t('dashboard.nextAction')}
+                </h2>
+                <Button
+                  size="lg"
+                  onClick={() => setLocation('/practice')}
+                  data-testid="button-continue-level"
+                >
+                  {t('practice.continue')}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </main>
 

@@ -1,20 +1,27 @@
 import { Link, useLocation } from 'wouter';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, LogOut } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
 import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   const { t } = useLanguage();
-  const [location] = useLocation();
+  const { user, signOut } = useAuth();
+  const [location, setLocation] = useLocation();
 
   const navItems = [
     { path: '/', label: t('nav.home') },
     { path: '/practice', label: t('nav.practice') },
-    { path: '/dashboard', label: t('nav.dashboard') },
+    ...(user ? [{ path: '/dashboard', label: t('nav.dashboard') }] : []),
     { path: '/pricing', label: t('nav.pricing') },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    setLocation('/');
+  };
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-md bg-background/90 border-b">
@@ -43,6 +50,17 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
+            {user ? (
+              <Button variant="ghost" size="icon" onClick={handleSignOut} data-testid="button-signout">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Link href="/auth">
+                <Button variant="default" data-testid="button-auth">
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

@@ -39,6 +39,22 @@ async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Config endpoint for client
+  app.get("/api/config", (req, res) => {
+    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    
+    // Auto-detect and fix swapped values
+    if (supabaseUrl.startsWith('eyJ') && supabaseAnonKey.startsWith('http')) {
+      [supabaseUrl, supabaseAnonKey] = [supabaseAnonKey, supabaseUrl];
+    }
+    
+    res.json({
+      supabaseUrl,
+      supabaseAnonKey,
+    });
+  });
+
   // Auth routes
   app.post("/api/auth/signup", async (req, res) => {
     try {

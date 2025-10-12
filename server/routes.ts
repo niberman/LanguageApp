@@ -115,12 +115,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile routes
-  app.post("/api/profile", authenticateUser, async (req, res) => {
+  app.post("/api/profile", authenticateUser, async (req: AuthRequest, res) => {
     try {
       const { id, displayName, locale } = req.body;
       const profile = await storage.createProfile({
-        id: id || req.user.id,
-        displayName: displayName || req.user.email?.split('@')[0] || 'User',
+        id: id || req.user!.id,
+        displayName: displayName || req.user!.email?.split('@')[0] || 'User',
         locale: locale || 'en',
       });
       res.json(profile);
@@ -130,9 +130,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/profile", authenticateUser, async (req, res) => {
+  app.get("/api/profile", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const profile = await storage.getProfile(req.user.id);
+      const profile = await storage.getProfile(req.user!.id);
       res.json(profile);
     } catch (error: any) {
       console.error('Get profile error:', error);
@@ -140,9 +140,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/profile", authenticateUser, async (req, res) => {
+  app.patch("/api/profile", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const profile = await storage.updateProfile(req.user.id, req.body);
+      const profile = await storage.updateProfile(req.user!.id, req.body);
       res.json(profile);
     } catch (error: any) {
       console.error('Update profile error:', error);
@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/levels", authenticateUser, requireAdmin, async (req, res) => {
+  app.post("/api/levels", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const validated = insertLevelSchema.parse(req.body);
       const level = await storage.createLevel(validated);
@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/levels/:id", authenticateUser, requireAdmin, async (req, res) => {
+  app.patch("/api/levels/:id", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const level = await storage.updateLevel(req.params.id, req.body);
       res.json(level);
@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/levels/:id", authenticateUser, requireAdmin, async (req, res) => {
+  app.delete("/api/levels/:id", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
     try {
       await storage.deleteLevel(req.params.id);
       res.json({ success: true });
@@ -212,12 +212,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Progress routes
-  app.get("/api/progress", authenticateUser, async (req, res) => {
+  app.get("/api/progress", authenticateUser, async (req: AuthRequest, res) => {
     try {
       const { track } = req.query;
       const progress = track
-        ? await storage.getUserProgressByTrack(req.user.id, track as string)
-        : await storage.getUserProgress(req.user.id);
+        ? await storage.getUserProgressByTrack(req.user!.id, track as string)
+        : await storage.getUserProgress(req.user!.id);
       res.json(progress);
     } catch (error: any) {
       console.error('Get progress error:', error);
@@ -225,9 +225,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/progress/streak", authenticateUser, async (req, res) => {
+  app.get("/api/progress/streak", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const streak = await storage.getUserStreak(req.user.id);
+      const streak = await storage.getUserStreak(req.user!.id);
       res.json({ streak });
     } catch (error: any) {
       console.error('Get streak error:', error);
@@ -235,11 +235,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/progress/:track/:number", authenticateUser, async (req, res) => {
+  app.get("/api/progress/:track/:number", authenticateUser, async (req: AuthRequest, res) => {
     try {
       const { track, number } = req.params;
       const progress = await storage.getUserLevelProgress(
-        req.user.id,
+        req.user!.id,
         track,
         parseInt(number)
       );
@@ -250,11 +250,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/progress", authenticateUser, async (req, res) => {
+  app.post("/api/progress", authenticateUser, async (req: AuthRequest, res) => {
     try {
       const validated = insertProgressEventSchema.parse({
         ...req.body,
-        userId: req.user.id,
+        userId: req.user!.id,
       });
       const event = await storage.createProgressEvent(validated);
       res.json(event);
@@ -277,10 +277,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard stats
-  app.get("/api/dashboard/stats", authenticateUser, async (req, res) => {
+  app.get("/api/dashboard/stats", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const streak = await storage.getUserStreak(req.user.id);
-      const allProgress = await storage.getUserProgress(req.user.id);
+      const streak = await storage.getUserStreak(req.user!.id);
+      const allProgress = await storage.getUserProgress(req.user!.id);
       
       const lastActivity = allProgress.length > 0 
         ? allProgress[0].createdAt 

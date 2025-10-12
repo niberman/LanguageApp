@@ -24,8 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkAuth = async () => {
       try {
-        // Wait a bit for Supabase to initialize
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Wait for Supabase to initialize completely
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         const { data: { session } } = await supabase.auth.getSession();
         

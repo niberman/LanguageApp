@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase';
+import type { User, Session, SupabaseClient } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -24,18 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkAuth = async () => {
       try {
-        // Wait for Supabase to initialize completely
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const { data: { session } } = await supabase.auth.getSession();
+        const client = await getSupabase();
         
         if (mounted) {
+          setSupabase(client);
+          
+          const { data: { session } } = await client.auth.getSession();
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
           
           // Set up auth state listener
-          const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
+          const { data: { subscription: sub } } = client.auth.onAuthStateChange(
             (_event: any, session: any) => {
               if (mounted) {
                 setSession(session);
@@ -62,10 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase not initialized');
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     
-    // Update state immediately with the session from sign in
+    // Update state immediately
     if (data.session) {
       setSession(data.session);
       setUser(data.session.user);
@@ -73,7 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    // Use client-side signup which creates both auth user and profile
+    if (!supabase) throw new Error('Supabase not initialized');
+    
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
@@ -85,20 +88,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) throw error;
     
-    // Update state immediately with the session from sign up
+    // Update state immediately
     if (data.session) {
       setSession(data.session);
       setUser(data.session.user);
     }
     
-    // Create profile in database
-    if (data.user) {
+    // Create profile
+    if (data.user && data.session) {
       try {
-        const response = await fetch('/api/profile', {
+        await fetch('/api/profile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${data.session?.access_token}`
+            'Authorization': `Bearer ${data.session.access_token}`
           },
           body: JSON.stringify({
             id: data.user.id,
@@ -106,10 +109,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             locale: 'en',
           })
         });
-        
-        if (!response.ok) {
-          console.error('Failed to create profile');
-        }
       } catch (err) {
         console.error('Profile creation error:', err);
       }
@@ -117,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) throw new Error('Supabase not initialized');
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };

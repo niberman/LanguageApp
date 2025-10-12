@@ -12,7 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
@@ -26,10 +26,10 @@ export default function Auth() {
     try {
       await signIn(signInData.email, signInData.password);
       toast({ title: 'Welcome back!', description: 'Successfully signed in' });
-      setLocation('/dashboard');
+      // Small delay to ensure state updates before navigation
+      setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -44,10 +44,10 @@ export default function Auth() {
     try {
       await signUp(signUpData.email, signUpData.password);
       toast({ title: 'Success!', description: 'Account created. Please check your email to confirm.' });
-      setLocation('/dashboard');
+      // Small delay to ensure state updates before navigation
+      setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } finally {
       setIsLoading(false);
     }
   };

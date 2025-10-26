@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { supabaseAdmin, getSupabaseClient } from "./lib/supabase";
-import { insertLevelSchema, insertProgressEventSchema, insertWaitlistEmailSchema } from "@shared/schema";
+import { insertWaitlistEmailSchema } from "@shared/schema";
 import { z } from "zod";
 
 interface AuthRequest extends Request {
@@ -150,117 +150,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Level routes
-  app.get("/api/levels", async (req, res) => {
+  // Course routes (NEW OOP MODEL)
+  app.get("/api/courses", async (req, res) => {
     try {
-      const { track } = req.query;
-      const levels = track 
-        ? await storage.getLevelsByTrack(track as string)
-        : await storage.getAllLevels();
-      res.json(levels);
+      const courses = await storage.getAllCourses();
+      res.json(courses);
     } catch (error: any) {
-      console.error('Get levels error:', error);
+      console.error('Get courses error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.get("/api/levels/:track/:number", async (req, res) => {
+  app.get("/api/courses/:id", async (req, res) => {
     try {
-      const { track, number } = req.params;
-      const level = await storage.getLevel(track, parseInt(number));
+      const course = await storage.getCourseWithContent(req.params.id);
       
-      if (!level) {
-        return res.status(404).json({ error: 'Level not found' });
+      if (!course) {
+        return res.status(404).json({ error: 'Course not found' });
       }
       
-      res.json(level);
+      res.json(course);
     } catch (error: any) {
-      console.error('Get level error:', error);
+      console.error('Get course error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.post("/api/levels", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
+  // Activity completion routes (replaces progress)
+  app.post("/api/activities/:id/complete", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const validated = insertLevelSchema.parse(req.body);
-      const level = await storage.createLevel(validated);
-      res.json(level);
+      const completion = await storage.completeActivity(req.user!.id, req.params.id);
+      res.json(completion);
     } catch (error: any) {
-      console.error('Create level error:', error);
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/levels/:id", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
-    try {
-      const level = await storage.updateLevel(req.params.id, req.body);
-      res.json(level);
-    } catch (error: any) {
-      console.error('Update level error:', error);
+      console.error('Complete activity error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.delete("/api/levels/:id", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
+  app.get("/api/completions", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      await storage.deleteLevel(req.params.id);
-      res.json({ success: true });
+      const completions = await storage.getUserCompletions(req.user!.id);
+      res.json(completions);
     } catch (error: any) {
-      console.error('Delete level error:', error);
+      console.error('Get completions error:', error);
       res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Progress routes
-  app.get("/api/progress", authenticateUser, async (req: AuthRequest, res) => {
-    try {
-      const { track } = req.query;
-      const progress = track
-        ? await storage.getUserProgressByTrack(req.user!.id, track as string)
-        : await storage.getUserProgress(req.user!.id);
-      res.json(progress);
-    } catch (error: any) {
-      console.error('Get progress error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.get("/api/progress/streak", authenticateUser, async (req: AuthRequest, res) => {
-    try {
-      const streak = await storage.getUserStreak(req.user!.id);
-      res.json({ streak });
-    } catch (error: any) {
-      console.error('Get streak error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.get("/api/progress/:track/:number", authenticateUser, async (req: AuthRequest, res) => {
-    try {
-      const { track, number } = req.params;
-      const progress = await storage.getUserLevelProgress(
-        req.user!.id,
-        track,
-        parseInt(number)
-      );
-      res.json(progress);
-    } catch (error: any) {
-      console.error('Get level progress error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/progress", authenticateUser, async (req: AuthRequest, res) => {
-    try {
-      const validated = insertProgressEventSchema.parse({
-        ...req.body,
-        userId: req.user!.id,
-      });
-      const event = await storage.createProgressEvent(validated);
-      res.json(event);
-    } catch (error: any) {
-      console.error('Create progress error:', error);
-      res.status(400).json({ error: error.message });
     }
   });
 
@@ -276,44 +209,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard stats
+  // Dashboard stats (updated for new model)
   app.get("/api/dashboard/stats", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const streak = await storage.getUserStreak(req.user!.id);
-      const allProgress = await storage.getUserProgress(req.user!.id);
+      const completions = await storage.getUserCompletions(req.user!.id);
+      const courses = await storage.getAllCourses();
       
-      const lastActivity = allProgress.length > 0 
-        ? allProgress[0].createdAt 
+      // Calculate streak based on completions
+      const streak = await storage.getUserStreak(req.user!.id);
+      
+      const lastActivity = completions.length > 0 
+        ? completions[completions.length - 1].completedAt 
         : null;
 
-      // Calculate overall progress percentage
-      const englishLevels = await storage.getLevelsByTrack('english');
-      const spanishLevels = await storage.getLevelsByTrack('spanish');
-      const totalLevels = englishLevels.length + spanishLevels.length;
-      
-      const completedLevels = new Set();
-      for (const event of allProgress) {
-        const key = `${event.track}-${event.levelNumber}`;
-        const levelProgress = await storage.getUserLevelProgress(
-          req.user.id,
-          event.track,
-          event.levelNumber
-        );
-        if (levelProgress.quizletViewed && levelProgress.videoWatched) {
-          completedLevels.add(key);
+      // Count total activities across all courses
+      let totalActivities = 0;
+      for (const course of courses) {
+        const fullCourse = await storage.getCourseWithContent(course.id);
+        if (fullCourse) {
+          for (const lesson of fullCourse.lessons) {
+            for (const topic of lesson.topics) {
+              totalActivities += topic.activities.length;
+            }
+          }
         }
       }
 
-      const progressPercentage = totalLevels > 0 
-        ? Math.round((completedLevels.size / totalLevels) * 100)
+      const progressPercentage = totalActivities > 0 
+        ? Math.round((completions.length / totalActivities) * 100)
         : 0;
 
       res.json({
         streak,
         lastActivity,
         progressPercentage,
-        totalLevels,
-        completedLevels: completedLevels.size,
+        totalActivities,
+        completedActivities: completions.length,
       });
     } catch (error: any) {
       console.error('Dashboard stats error:', error);

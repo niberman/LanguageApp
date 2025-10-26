@@ -5,12 +5,21 @@ import * as schema from "@shared/schema";
 import type {
   Profile,
   InsertProfile,
-  Level,
-  InsertLevel,
-  ProgressEvent,
-  InsertProgressEvent,
+  Course,
+  Lesson,
+  Topic,
+  Activity,
+  ActivityCompletion,
   InsertWaitlistEmail,
 } from "@shared/schema";
+import {
+  Course as CourseModel,
+  Lesson as LessonModel,
+  Topic as TopicModel,
+  VideoActivity,
+  QuizletActivity,
+  AIChatActivity,
+} from "@shared/models";
 
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString);
@@ -22,20 +31,14 @@ export interface IStorage {
   createProfile(profile: InsertProfile & { id: string }): Promise<Profile>;
   updateProfile(userId: string, data: Partial<InsertProfile>): Promise<Profile | undefined>;
 
-  // Level operations
-  getAllLevels(): Promise<Level[]>;
-  getLevelsByTrack(track: string): Promise<Level[]>;
-  getLevel(track: string, number: number): Promise<Level | undefined>;
-  createLevel(level: InsertLevel): Promise<Level>;
-  updateLevel(id: string, data: Partial<InsertLevel>): Promise<Level | undefined>;
-  deleteLevel(id: string): Promise<void>;
+  // Course operations (NEW OOP MODEL)
+  getAllCourses(): Promise<Course[]>;
+  getCourseWithContent(courseId: string): Promise<CourseModel | null>;
 
-  // Progress operations
-  getUserProgress(userId: string): Promise<ProgressEvent[]>;
-  getUserProgressByTrack(userId: string, track: string): Promise<ProgressEvent[]>;
-  createProgressEvent(event: InsertProgressEvent): Promise<ProgressEvent>;
+  // Activity completion operations
+  completeActivity(userId: string, activityId: string): Promise<ActivityCompletion>;
+  getUserCompletions(userId: string): Promise<ActivityCompletion[]>;
   getUserStreak(userId: string): Promise<number>;
-  getUserLevelProgress(userId: string, track: string, levelNumber: number): Promise<{ quizletViewed: boolean; videoWatched: boolean }>;
 
   // Waitlist operations
   addToWaitlist(email: string): Promise<void>;
@@ -69,93 +72,138 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  // Level operations
-  async getAllLevels(): Promise<Level[]> {
-    return db.select().from(schema.levels).orderBy(schema.levels.track, schema.levels.number);
+  // Course operations (NEW OOP MODEL)
+  async getAllCourses(): Promise<Course[]> {
+    return db.select().from(schema.courses);
   }
 
-  async getLevelsByTrack(track: string): Promise<Level[]> {
-    return db
+  async getCourseWithContent(courseId: string): Promise<CourseModel | null> {
+    // Get course
+    const courseResults = await db
       .select()
-      .from(schema.levels)
-      .where(eq(schema.levels.track, track))
-      .orderBy(schema.levels.number);
-  }
-
-  async getLevel(track: string, number: number): Promise<Level | undefined> {
-    const result = await db
-      .select()
-      .from(schema.levels)
-      .where(and(eq(schema.levels.track, track), eq(schema.levels.number, number)))
+      .from(schema.courses)
+      .where(eq(schema.courses.id, courseId))
       .limit(1);
-    return result[0];
+
+    if (courseResults.length === 0) return null;
+    const course = courseResults[0];
+
+    // Get lessons for this course
+    const lessonResults = await db
+      .select()
+      .from(schema.lessons)
+      .where(eq(schema.lessons.courseId, courseId))
+      .orderBy(schema.lessons.order);
+
+    const courseModel = new CourseModel(course.id, course.title, course.description);
+
+    // For each lesson, get topics and activities
+    for (const lesson of lessonResults) {
+      const lessonModel = new LessonModel(lesson.id, lesson.title, lesson.order);
+
+      // Get topics for this lesson
+      const topicResults = await db
+        .select()
+        .from(schema.topics)
+        .where(eq(schema.topics.lessonId, lesson.id));
+
+      for (const topic of topicResults) {
+        const topicModel = new TopicModel(topic.id, topic.title, topic.summary);
+
+        // Get activities for this topic
+        const activityResults = await db
+          .select()
+          .from(schema.activities)
+          .where(eq(schema.activities.topicId, topic.id));
+
+        for (const activity of activityResults) {
+          let activityModel;
+          const data = activity.data as any;
+
+          switch (activity.type) {
+            case 'video':
+              activityModel = new VideoActivity(activity.id, data.videoUrl);
+              break;
+            case 'quizlet':
+              activityModel = new QuizletActivity(activity.id, data.quizletId);
+              break;
+            case 'aiChat':
+              activityModel = new AIChatActivity(activity.id, data.promptSet);
+              break;
+            default:
+              continue;
+          }
+
+          topicModel.addActivity(activityModel);
+        }
+
+        lessonModel.addTopic(topicModel);
+      }
+
+      courseModel.addLesson(lessonModel);
+    }
+
+    return courseModel;
   }
 
-  async createLevel(level: InsertLevel): Promise<Level> {
-    const result = await db.insert(schema.levels).values(level).returning();
-    return result[0];
-  }
+  // Activity completion operations
+  async completeActivity(userId: string, activityId: string): Promise<ActivityCompletion> {
+    // Check if already completed
+    const existing = await db
+      .select()
+      .from(schema.activityCompletions)
+      .where(
+        and(
+          eq(schema.activityCompletions.userId, userId),
+          eq(schema.activityCompletions.activityId, activityId)
+        )
+      )
+      .limit(1);
 
-  async updateLevel(id: string, data: Partial<InsertLevel>): Promise<Level | undefined> {
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
     const result = await db
-      .update(schema.levels)
-      .set(data)
-      .where(eq(schema.levels.id, id))
+      .insert(schema.activityCompletions)
+      .values({ userId, activityId })
       .returning();
     return result[0];
   }
 
-  async deleteLevel(id: string): Promise<void> {
-    await db.delete(schema.levels).where(eq(schema.levels.id, id));
-  }
-
-  // Progress operations
-  async getUserProgress(userId: string): Promise<ProgressEvent[]> {
+  async getUserCompletions(userId: string): Promise<ActivityCompletion[]> {
     return db
       .select()
-      .from(schema.progressEvents)
-      .where(eq(schema.progressEvents.userId, userId))
-      .orderBy(desc(schema.progressEvents.createdAt));
-  }
-
-  async getUserProgressByTrack(userId: string, track: string): Promise<ProgressEvent[]> {
-    return db
-      .select()
-      .from(schema.progressEvents)
-      .where(and(eq(schema.progressEvents.userId, userId), eq(schema.progressEvents.track, track)))
-      .orderBy(desc(schema.progressEvents.createdAt));
-  }
-
-  async createProgressEvent(event: InsertProgressEvent): Promise<ProgressEvent> {
-    const result = await db.insert(schema.progressEvents).values(event).returning();
-    return result[0];
+      .from(schema.activityCompletions)
+      .where(eq(schema.activityCompletions.userId, userId))
+      .orderBy(desc(schema.activityCompletions.completedAt));
   }
 
   async getUserStreak(userId: string): Promise<number> {
     // Get distinct days with activity, ordered by date descending
-    const events = await db
+    const completions = await db
       .selectDistinct({
-        date: sql<string>`DATE(${schema.progressEvents.createdAt})`,
+        date: sql<string>`DATE(${schema.activityCompletions.completedAt})`,
       })
-      .from(schema.progressEvents)
-      .where(eq(schema.progressEvents.userId, userId))
-      .orderBy(desc(sql`DATE(${schema.progressEvents.createdAt})`));
+      .from(schema.activityCompletions)
+      .where(eq(schema.activityCompletions.userId, userId))
+      .orderBy(desc(sql`DATE(${schema.activityCompletions.completedAt})`));
 
-    if (events.length === 0) return 0;
+    if (completions.length === 0) return 0;
 
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    for (let i = 0; i < events.length; i++) {
-      const eventDate = new Date(events[i].date);
-      eventDate.setHours(0, 0, 0, 0);
+    for (let i = 0; i < completions.length; i++) {
+      const completionDate = new Date(completions[i].date);
+      completionDate.setHours(0, 0, 0, 0);
       
       const expectedDate = new Date(today);
       expectedDate.setDate(today.getDate() - i);
       expectedDate.setHours(0, 0, 0, 0);
 
-      if (eventDate.getTime() === expectedDate.getTime()) {
+      if (completionDate.getTime() === expectedDate.getTime()) {
         streak++;
       } else {
         break;
@@ -163,28 +211,6 @@ export class DbStorage implements IStorage {
     }
 
     return streak;
-  }
-
-  async getUserLevelProgress(
-    userId: string,
-    track: string,
-    levelNumber: number
-  ): Promise<{ quizletViewed: boolean; videoWatched: boolean }> {
-    const events = await db
-      .select()
-      .from(schema.progressEvents)
-      .where(
-        and(
-          eq(schema.progressEvents.userId, userId),
-          eq(schema.progressEvents.track, track),
-          eq(schema.progressEvents.levelNumber, levelNumber)
-        )
-      );
-
-    return {
-      quizletViewed: events.some((e) => e.kind === "quizlet_view"),
-      videoWatched: events.some((e) => e.kind === "video_watch"),
-    };
   }
 
   // Waitlist operations

@@ -1,0 +1,160 @@
+Refactor the entire LangSchoolConnect project to use a new object-oriented content model integrated with Supabase.
+
+🗺️ Objective
+Replace the old "levels" and "tracks" structure with:
+  Course → Lesson → Topic → Activity
+Each Course (e.g., “Fundamentos de Inglés 1”) contains Lessons, each Lesson has Topics, and each Topic has Activities (video, Quizlet, or AI chat).
+
+---
+
+### 1⃣ Remove Old Structure
+- Delete all legacy `levels`/`tracks` code and database logic.
+- Remove old API routes:
+  - `/api/levels`
+  - `/api/levels/:track/:number`
+- Delete unused components:
+  - `PracticeLevels.tsx`
+  - `LevelDetail.tsx`
+  - Any code referencing `track` or `number`.
+- Remove the `levels` table from the Drizzle schema and all seed data.
+
+---
+
+### 2⃣ Add New OOP Models
+Create TypeScript class files in `/shared/models/`:
+
+#### Course.ts
+```ts
+export class Course {
+  constructor(public id: string, public title: string, public description: string, public lessons: Lesson[] = []) {}
+  addLesson(lesson: Lesson) { this.lessons.push(lesson); }
+  getProgress() { return this.lessons.length ? this.lessons.filter(l => l.getProgress() === 1).length / this.lessons.length : 0; }
+}
+```
+
+#### Lesson.ts
+```ts
+export class Lesson {
+  constructor(public id: string, public title: string, public order: number, public topics: Topic[] = []) {}
+  addTopic(topic: Topic) { this.topics.push(topic); }
+  getProgress() { return this.topics.length ? this.topics.filter(t => t.getProgress() === 1).length / this.topics.length : 0; }
+}
+```
+
+#### Topic.ts
+```ts
+export class Topic {
+  constructor(public id: string, public title: string, public summary: string, public activities: Activity[] = []) {}
+  addActivity(activity: Activity) { this.activities.push(activity); }
+  getProgress() { return this.activities.length ? this.activities.filter(a => a.completed).length / this.activities.length : 0; }
+}
+```
+
+#### Activity.ts (abstract) + subclasses
+```ts
+export abstract class Activity {
+  constructor(public id: string, public type: string, public completed = false) {}
+  complete() { this.completed = true; }
+}
+
+export class VideoActivity extends Activity {
+  constructor(id: string, public videoUrl: string) { super(id, "video"); }
+}
+
+export class QuizletActivity extends Activity {
+  constructor(id: string, public quizletId: string) { super(id, "quizlet"); }
+}
+
+export class AIChatActivity extends Activity {
+  constructor(id: string, public promptSet: string[]) { super(id, "aiChat"); }
+}
+```
+
+---
+
+### 3⃣ Update Database Schema (Drizzle + Supabase)
+Replace `levels` with these tables:
+
+#### `courses`
+- `id` (uuid, primary key)
+- `title` (text)
+- `description` (text)
+
+#### `lessons`
+- `id` (uuid, primary key)
+- `course_id` (uuid → references courses.id)
+- `title` (text)
+- `order` (integer)
+
+#### `topics`
+- `id` (uuid, primary key)
+- `lesson_id` (uuid → references lessons.id)
+- `title` (text)
+- `summary` (text)
+
+#### `activities`
+- `id` (uuid, primary key)
+- `topic_id` (uuid → references topics.id)
+- `type` (enum: 'video' | 'quizlet' | 'aiChat')
+- `data` (jsonb → store videoUrl, quizletId, or promptSet)
+- `completed` (boolean)
+
+Create new Drizzle migration files and update `drizzle.config.ts`.
+
+---
+
+### 4⃣ Connect to Supabase
+- Use your existing Supabase client configuration:
+```ts
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://wsepwuxkwjnsgmkddkjw.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
+- Update `/server/routes`:
+  - `/api/courses` → returns all courses with nested lessons/topics/activities (join queries)
+  - `/api/courses/:id` → returns one course with full hierarchy
+- Use `supabase.from('courses').select('*, lessons(*, topics(*, activities(*)))')` for efficient hierarchical loading.
+
+---
+
+### 5⃣ Update Frontend Pages
+- Replace the old `/practice` route with `/courses`.
+- Create pages:
+  - `/courses` → lists available courses
+  - `/courses/:id` → shows lessons
+  - `/courses/:id/lessons/:lessonId` → shows topics
+  - `/courses/:id/lessons/:lessonId/topics/:topicId` → renders activities
+- Reuse existing video and Quizlet embedding components; adapt to `Activity` subclasses.
+- Add new `AIChatActivity` UI with text input and GPT API integration (coming soon).
+
+---
+
+### 6⃣ Migrate and Seed Data
+Add seed script `/drizzle/seedCourses.ts`:
+```ts
+await db.insert(courses).values({ title: "Fundamentos de Inglés 1", description: "Introductory English course" });
+await db.insert(lessons).values({ title: "Lección 1", course_id: c1.id, order: 1 });
+await db.insert(topics).values({ title: "Greetings and Introductions", lesson_id: l1.id });
+await db.insert(activities).values([
+  { topic_id: t1.id, type: "video", data: { videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI" } },
+  { topic_id: t1.id, type: "quizlet", data: { quizletId: "123456789" } },
+  { topic_id: t1.id, type: "aiChat", data: { promptSet: ["Hello!", "How are you?"] } }
+]);
+```
+
+---
+
+### 7⃣ Verify and Commit
+- Run:
+```
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+- Test that `/courses/1` loads the new OOP data structure.
+- Commit changes and push to GitHub.
+
+---
+
+🌟 **Goal:**
+LangSchoolConnect now uses an OOP model linked to Supabase for all course content, ready for scalable multilingual and employer-integrated language training.

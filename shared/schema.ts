@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, jsonb, uuid, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, jsonb, uuid, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,28 +12,47 @@ export const profiles = pgTable("profiles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Levels table
-export const levels = pgTable("levels", {
+// Courses table
+export const courses = pgTable("courses", {
   id: uuid("id").primaryKey().defaultRandom(),
-  track: text("track").notNull(), // "english" | "spanish"
-  number: integer("number").notNull(),
   title: text("title").notNull(),
-  quizletSetIds: text("quizlet_set_ids").array().notNull().default(sql`ARRAY[]::text[]`),
-  youtubePlaylistIds: text("youtube_playlist_ids").array().notNull().default(sql`ARRAY[]::text[]`),
-  youtubeUrl: text("youtube_url"), // Direct YouTube video URL
-}, (table) => ({
-  uniqueTrackNumber: unique().on(table.track, table.number),
-}));
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
-// Progress events table
-export const progressEvents = pgTable("progress_events", {
+// Lessons table
+export const lessons = pgTable("lessons", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  order: integer("order").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Topics table
+export const topics = pgTable("topics", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  lessonId: uuid("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  summary: text("summary").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Activities table
+export const activities = pgTable("activities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  topicId: uuid("topic_id").notNull().references(() => topics.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // "video" | "quizlet" | "aiChat"
+  data: jsonb("data").notNull(), // { videoUrl } | { quizletId } | { promptSet }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Activity completions table (replaces progress_events)
+export const activityCompletions = pgTable("activity_completions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
-  track: text("track").notNull(),
-  levelNumber: integer("level_number").notNull(),
-  kind: text("kind").notNull(), // "quizlet_view" | "video_watch"
-  payload: jsonb("payload"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  activityId: uuid("activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
 });
 
 // Waitlist emails table
@@ -49,13 +68,29 @@ export const insertProfileSchema = createInsertSchema(profiles).omit({
   createdAt: true,
 });
 
-export const insertLevelSchema = createInsertSchema(levels).omit({
-  id: true,
-});
-
-export const insertProgressEventSchema = createInsertSchema(progressEvents).omit({
+export const insertCourseSchema = createInsertSchema(courses).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertLessonSchema = createInsertSchema(lessons).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTopicSchema = createInsertSchema(topics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertActivitySchema = createInsertSchema(activities).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertActivityCompletionSchema = createInsertSchema(activityCompletions).omit({
+  id: true,
+  completedAt: true,
 });
 
 export const insertWaitlistEmailSchema = createInsertSchema(waitlistEmails).omit({
@@ -67,11 +102,20 @@ export const insertWaitlistEmailSchema = createInsertSchema(waitlistEmails).omit
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type Profile = typeof profiles.$inferSelect;
 
-export type InsertLevel = z.infer<typeof insertLevelSchema>;
-export type Level = typeof levels.$inferSelect;
+export type InsertCourse = z.infer<typeof insertCourseSchema>;
+export type Course = typeof courses.$inferSelect;
 
-export type InsertProgressEvent = z.infer<typeof insertProgressEventSchema>;
-export type ProgressEvent = typeof progressEvents.$inferSelect;
+export type InsertLesson = z.infer<typeof insertLessonSchema>;
+export type Lesson = typeof lessons.$inferSelect;
+
+export type InsertTopic = z.infer<typeof insertTopicSchema>;
+export type Topic = typeof topics.$inferSelect;
+
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Activity = typeof activities.$inferSelect;
+
+export type InsertActivityCompletion = z.infer<typeof insertActivityCompletionSchema>;
+export type ActivityCompletion = typeof activityCompletions.$inferSelect;
 
 export type InsertWaitlistEmail = z.infer<typeof insertWaitlistEmailSchema>;
 export type WaitlistEmail = typeof waitlistEmails.$inferSelect;

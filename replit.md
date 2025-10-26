@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-A production-ready bilingual (English/Spanish) language learning platform featuring:
-- **29 foundation levels** (17 English + 12 Spanish)
-- **Embedded learning content** (Quizlet vocabulary sets, YouTube lesson playlists)
+A production-ready language learning platform featuring:
+- **17 English foundation levels** with embedded YouTube lessons and Quizlet flashcards
+- **Embedded learning content** (Quizlet vocabulary sets, YouTube video lessons)
 - **Progress tracking** with streak counters and completion percentages
 - **Supabase authentication** (email/password + Google OAuth)
 - **Freemium pricing model** (Free tier + Pro tier)
@@ -12,6 +12,13 @@ A production-ready bilingual (English/Spanish) language learning platform featur
 - **Dark mode support** with theme persistence
 
 ## Recent Changes (Latest Session)
+
+### ✅ Removed All Spanish Content
+- Deleted all 12 Spanish levels from database (track='spanish')
+- Removed Spanish track selector from Practice page
+- Cleaned up all Spanish references in LevelDetail and PracticeLevels pages
+- App now focuses exclusively on English language learning with 17 levels
+- **Tested end-to-end:** Practice page shows only English track, all English levels load correctly, embeds work properly
 
 ### ✅ Fixed Critical Authentication Double-Login Bug
 - Implemented global Supabase singleton using `globalThis.__supabaseClient` to prevent multiple client instances
@@ -34,8 +41,8 @@ A production-ready bilingual (English/Spanish) language learning platform featur
 ### ✅ End-to-End Testing Completed
 All public pages verified working:
 - Home page with hero section and CTA
-- Practice page with level cards (English/Spanish)
-- Level detail pages with embedded content
+- Practice page with English track
+- Level detail pages with embedded YouTube/Quizlet content
 - Settings page with language/theme preferences
 - Pricing page with Free/Pro tiers
 - Language toggle (EN/ES)

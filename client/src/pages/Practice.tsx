@@ -18,20 +18,13 @@ export default function Practice() {
             {t('practice.title')}
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="max-w-md">
             <TrackSelector
               title={t('practice.english')}
               description="Master English from the basics"
               levelCount={17}
               flag="🇺🇸"
               onClick={() => setLocation('/practice/english')}
-            />
-            <TrackSelector
-              title={t('practice.spanish')}
-              description="Aprende los fundamentos del español"
-              levelCount={12}
-              flag="🇪🇸"
-              onClick={() => setLocation('/practice/spanish')}
             />
           </div>
         </div>

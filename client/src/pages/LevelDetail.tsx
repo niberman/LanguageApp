@@ -63,8 +63,7 @@ export default function LevelDetail() {
     toast({ title: 'Progress recorded', description: 'Video lesson opened' });
   };
 
-  const trackTitle = params?.track === 'english' ? 'English' : 'Spanish';
-  const levelTitle = level?.title || `${trackTitle} Level ${params?.level}`;
+  const levelTitle = level?.title || `English Level ${params?.level}`;
   const quizletId = level?.quizletSetIds?.[0] || 'placeholder';
   
   // Extract YouTube video ID from URL or use playlist ID

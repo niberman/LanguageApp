@@ -26,7 +26,7 @@ export default function PracticeLevels() {
     enabled: !!user,
   });
 
-  const trackTitle = params?.track === 'english' ? t('practice.english') : t('practice.spanish');
+  const trackTitle = t('practice.english');
 
   const calculateProgress = (levelNumber: number) => {
     const events = progressData.filter((e: any) => e.levelNumber === levelNumber);
@@ -72,7 +72,7 @@ export default function PracticeLevels() {
                     title={level.title}
                     progress={progress}
                     isCompleted={progress === 100}
-                    track={params?.track as 'english' | 'spanish'}
+                    track="english"
                     onClick={() => setLocation(`/practice/${params?.track}/${level.number}`)}
                   />
                 );

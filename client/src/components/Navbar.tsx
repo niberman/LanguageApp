@@ -13,7 +13,7 @@ export default function Navbar() {
 
   const navItems = [
     { path: '/', label: t('nav.home') },
-    { path: '/practice', label: t('nav.practice') },
+    { path: '/courses', label: t('nav.practice') },
     ...(user ? [{ path: '/dashboard', label: t('nav.dashboard') }] : []),
     { path: '/pricing', label: t('nav.pricing') },
   ];

@@ -1,4 +1,4 @@
-# The Language School - "Let's Start Talking!"
+# La Escuela de Idiomas - "¡Empecemos a hablar!"
 
 ## Project Overview
 
@@ -8,10 +8,41 @@ A production-ready language learning platform featuring:
 - **Activity completion tracking** with streak counters and progress percentages
 - **Supabase authentication** (email/password + Google OAuth)
 - **Freemium pricing model** (Free tier + Pro tier)
-- **Full bilingual UI** with instant language switching (EN ⇄ ES)
+- **Spanish-only UI** - All content and interface in Spanish
 - **Dark mode support** with theme persistence
 
 ## Recent Changes (Latest Session)
+
+### ✅ Complete Spanish Localization (October 2025)
+**Converted application from bilingual to Spanish-only:**
+
+- **UI Changes**:
+  - Updated LanguageContext default locale to 'es' (Spanish)
+  - Removed LanguageToggle component from Navbar
+  - Removed language selector from Settings page
+  - Updated all page components with Spanish translations
+  - Updated EmbedFrame button text: "Abrir en pestaña nueva"
+  
+- **Content Updates**:
+  - Database seed content entirely in Spanish
+  - Course: "Fundamentos de Inglés 1"
+  - Lessons: "Lección 1: Saludos y Presentaciones", "Lección 2: Números y Conteo"
+  - Topics: "Saludos Básicos", "Presentándote a Ti Mismo", "Números del 1 al 20"
+  - Cleaned duplicate English course data from database
+
+- **Meta Tags & SEO**:
+  - HTML lang attribute: "es"
+  - Page title: "La Escuela de Idiomas - ¡Empecemos a hablar!"
+  - Meta description in Spanish
+  - All page components use Spanish text
+
+- **Components Updated**:
+  - Navbar, Footer, Home, Dashboard, Auth pages
+  - All course-related pages (Courses, CourseDetail, LessonDetail, TopicDetail)
+  - Settings, Pricing, not-found pages
+  - No English UI text remains (except English vocabulary in learning content)
+
+### ✅ Previous Changes
 
 ### ✅ Major Architectural Refactor: OOP Content Model
 **Replaced level-based system with hierarchical object-oriented model:**
@@ -45,10 +76,10 @@ A production-ready language learning platform featuring:
   - `GET /api/completions` - Get user's completed activities
   - `GET /api/dashboard/stats` - Dashboard stats (now activity-based, not level-based)
 
-- **Sample Content Seeded**:
-  - Course: "Fundamentos de Inglés 1" (Beginner English)
-  - 2 Lessons: "Greetings & Introductions", "Numbers & Colors"
-  - 3 Topics: "Basic Greetings", "Numbers 1-20", "Common Colors"
+- **Sample Content Seeded** (All in Spanish):
+  - Course: "Fundamentos de Inglés 1" (Beginner English course)
+  - 2 Lessons: "Lección 1: Saludos y Presentaciones", "Lección 2: Números y Conteo"
+  - 3 Topics: "Saludos Básicos", "Presentándote a Ti Mismo", "Números del 1 al 20"
   - 8 Activities: Mix of YouTube videos and Quizlet sets
 
 ### ✅ Progress Tracking Refactor
@@ -69,7 +100,7 @@ A production-ready language learning platform featuring:
 - Tailwind CSS + shadcn/ui components
 - Wouter (routing)
 - TanStack Query (data fetching)
-- Bilingual i18n system (LanguageContext)
+- Spanish-only UI (LanguageContext with 'es' default)
 
 **Backend:**
 - Express.js
@@ -107,11 +138,11 @@ A production-ready language learning platform featuring:
 - View user analytics
 - Content management system
 
-### 4. Bilingual UI
+### 4. Spanish-Only UI
 - Context-based translation system
-- Instant language switching
-- Persisted language preference
-- All UI strings translated (EN/ES)
+- Default locale: Spanish ('es')
+- All UI strings in Spanish
+- No language switching available to users
 
 ### 5. Authentication
 - Email/password signup/signin

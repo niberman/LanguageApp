@@ -25,7 +25,7 @@ export default function Auth() {
     setIsLoading(true);
     try {
       await signIn(signInData.email, signInData.password);
-      toast({ title: 'Welcome back!', description: 'Successfully signed in' });
+      toast({ title: '¡Bienvenido de nuevo!', description: 'Sesión iniciada exitosamente' });
       // Small delay to ensure state updates before navigation
       setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
@@ -37,13 +37,13 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signUpData.password !== signUpData.confirmPassword) {
-      toast({ title: 'Error', description: 'Passwords do not match', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Las contraseñas no coinciden', variant: 'destructive' });
       return;
     }
     setIsLoading(true);
     try {
       await signUp(signUpData.email, signUpData.password);
-      toast({ title: 'Success!', description: 'Account created successfully!' });
+      toast({ title: '¡Éxito!', description: '¡Cuenta creada exitosamente!' });
       // Small delay to ensure state updates before navigation
       setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
@@ -57,19 +57,19 @@ export default function Auth() {
       <Card className="w-full max-w-md p-8">
         <div className="flex items-center justify-center gap-2 mb-8">
           <GraduationCap className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold">The Language School</h1>
+          <h1 className="text-2xl font-bold">La Escuela de Idiomas</h1>
         </div>
 
         <Tabs defaultValue="signin">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="signin" data-testid="tab-signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signin" data-testid="tab-signin">{t('auth.signin')}</TabsTrigger>
+            <TabsTrigger value="signup" data-testid="tab-signup">{t('auth.signup')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email">{t('auth.email')}</Label>
                 <Input
                   id="signin-email"
                   type="email"
@@ -81,7 +81,7 @@ export default function Auth() {
                 />
               </div>
               <div>
-                <Label htmlFor="signin-password">Password</Label>
+                <Label htmlFor="signin-password">{t('auth.password')}</Label>
                 <Input
                   id="signin-password"
                   type="password"
@@ -93,7 +93,7 @@ export default function Auth() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signin">
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? 'Iniciando sesión...' : t('auth.signInButton')}
               </Button>
             </form>
           </TabsContent>
@@ -101,7 +101,7 @@ export default function Auth() {
           <TabsContent value="signup">
             <form onSubmit={handleSignUp} className="space-y-4">
               <div>
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email">{t('auth.email')}</Label>
                 <Input
                   id="signup-email"
                   type="email"
@@ -113,7 +113,7 @@ export default function Auth() {
                 />
               </div>
               <div>
-                <Label htmlFor="signup-password">Password</Label>
+                <Label htmlFor="signup-password">{t('auth.password')}</Label>
                 <Input
                   id="signup-password"
                   type="password"
@@ -125,7 +125,7 @@ export default function Auth() {
                 />
               </div>
               <div>
-                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                <Label htmlFor="signup-confirm-password">Confirmar contraseña</Label>
                 <Input
                   id="signup-confirm-password"
                   type="password"
@@ -137,7 +137,7 @@ export default function Auth() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signup">
-                {isLoading ? 'Creating account...' : 'Sign Up'}
+                {isLoading ? 'Creando cuenta...' : t('auth.signUpButton')}
               </Button>
             </form>
           </TabsContent>

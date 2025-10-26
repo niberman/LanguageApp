@@ -30,7 +30,7 @@ export default function Navbar() {
           <Link href="/" data-testid="link-home">
             <div className="flex items-center gap-2 hover-elevate rounded-md px-2 py-1">
               <GraduationCap className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">The Language School</span>
+              <span className="font-bold text-lg">La Escuela de Idiomas</span>
             </div>
           </Link>
 
@@ -48,7 +48,6 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2">
-            <LanguageToggle />
             <ThemeToggle />
             {user ? (
               <Button variant="ghost" size="icon" onClick={handleSignOut} data-testid="button-signout">
@@ -57,7 +56,7 @@ export default function Navbar() {
             ) : (
               <Link href="/auth">
                 <Button variant="default" data-testid="button-auth">
-                  Sign In
+                  {t('nav.signin')}
                 </Button>
               </Link>
             )}

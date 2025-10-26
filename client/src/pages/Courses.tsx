@@ -25,7 +25,7 @@ export default function Courses() {
           </h1>
 
           {isLoading ? (
-            <div className="text-center py-12">Loading courses...</div>
+            <div className="text-center py-12">{t('common.loading')}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {courses.map((course: any) => (

@@ -47,11 +47,11 @@ export default function Home() {
               <FeatureCard
                 icon={LayoutDashboard}
                 title={t('nav.dashboard')}
-                description="Track your progress and maintain your streak"
+                description="Sigue tu progreso y mantén tu racha diaria"
               />
               <FeatureCard
                 icon={Sparkles}
-                title="AI Chat"
+                title="Chat IA"
                 description={t('comingSoon.chat')}
                 badge={t('pricing.comingSoon')}
               />
@@ -67,13 +67,13 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <FeatureCard
                 icon={Users}
-                title="Events"
+                title="Eventos"
                 description={t('comingSoon.events')}
                 badge={t('pricing.comingSoon')}
               />
               <FeatureCard
                 icon={Briefcase}
-                title="Work"
+                title="Trabajo"
                 description={t('comingSoon.work')}
                 badge={t('pricing.comingSoon')}
               />

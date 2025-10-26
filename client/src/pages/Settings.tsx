@@ -16,8 +16,8 @@ export default function Settings() {
   const handleSave = () => {
     //todo: remove mock functionality
     toast({
-      title: 'Settings saved',
-      description: 'Your preferences have been updated',
+      title: 'Ajustes guardados',
+      description: 'Tus preferencias han sido actualizadas',
     });
     console.log('Settings saved:', { displayName, locale });
   };
@@ -53,7 +53,7 @@ export default function Settings() {
                     onClick={() => setLocale('en')}
                     data-testid="button-language-en"
                   >
-                    English
+                    Inglés
                   </Button>
                   <Button
                     variant={locale === 'es' ? 'default' : 'outline'}

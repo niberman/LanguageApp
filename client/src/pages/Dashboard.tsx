@@ -34,7 +34,7 @@ export default function Dashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -43,11 +43,11 @@ export default function Dashboard() {
   if (!user) return null;
 
   const formatDate = (date: string | null) => {
-    if (!date) return 'Never';
+    if (!date) return 'Nunca';
     const d = new Date(date);
     const today = new Date();
     if (d.toDateString() === today.toDateString()) return t('dashboard.today');
-    return d.toLocaleDateString();
+    return d.toLocaleDateString('es-ES');
   };
 
   return (
@@ -61,7 +61,7 @@ export default function Dashboard() {
           </h1>
 
           {isLoading ? (
-            <div className="text-center py-12">Loading dashboard...</div>
+            <div className="text-center py-12">{t('common.loading')}</div>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -85,7 +85,7 @@ export default function Dashboard() {
                 />
                 <StatCard
                   icon={Target}
-                  label="Completed Activities"
+                  label={t('dashboard.activitiesCompleted')}
                   value={`${stats?.completedActivities || 0}/${stats?.totalActivities || 0}`}
                   accentColor="primary"
                 />

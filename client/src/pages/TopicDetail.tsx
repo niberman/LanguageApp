@@ -59,7 +59,7 @@ export default function TopicDetail() {
         <Navbar />
         <main className="flex-1 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center py-12">Loading...</div>
+            <div className="text-center py-12">{t('common.loading')}</div>
           </div>
         </main>
         <Footer />
@@ -76,7 +76,7 @@ export default function TopicDetail() {
         <Navbar />
         <main className="flex-1 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center py-12">Topic not found</div>
+            <div className="text-center py-12">Tema no encontrado</div>
           </div>
         </main>
         <Footer />
@@ -86,12 +86,12 @@ export default function TopicDetail() {
 
   const handleActivityComplete = (activityId: string) => {
     if (!user) {
-      toast({ title: 'Please sign in', description: 'Sign in to track your progress' });
+      toast({ title: 'Por favor inicia sesión', description: 'Inicia sesión para seguir tu progreso' });
       setLocation('/auth');
       return;
     }
     completeActivity.mutate(activityId);
-    toast({ title: 'Progress saved!', description: 'Activity marked as complete' });
+    toast({ title: '¡Progreso guardado!', description: 'Actividad marcada como completada' });
   };
 
   return (
@@ -107,7 +107,7 @@ export default function TopicDetail() {
               data-testid="button-back-to-lesson"
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
-              Back to lesson
+              {t('topic.backToLesson')}
             </Button>
           </div>
 
@@ -132,7 +132,7 @@ export default function TopicDetail() {
                     type="youtube"
                     embedUrl={`https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ''}`}
                     externalUrl={activity.videoUrl}
-                    title="Watch Video Lesson"
+                    title="Ver lección en video"
                     onInteraction={() => handleActivityComplete(activity.id)}
                   />
                 );
@@ -144,7 +144,7 @@ export default function TopicDetail() {
                     key={activity.id}
                     type="quizlet"
                     embedUrl={`https://quizlet.com/${activity.quizletId}`}
-                    title="Practice with Quizlet"
+                    title="Practicar con Quizlet"
                     onInteraction={() => handleActivityComplete(activity.id)}
                   />
                 );
@@ -156,16 +156,16 @@ export default function TopicDetail() {
                     <CardHeader>
                       <div className="flex items-center gap-3">
                         <MessageSquare className="h-6 w-6 text-primary" />
-                        <CardTitle>AI Practice Chat</CardTitle>
+                        <CardTitle>Práctica de conversación IA</CardTitle>
                       </div>
                       <CardDescription>
-                        Practice conversation with AI assistant
+                        Practica conversación con asistente IA
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground mb-4">
-                          Practice these phrases:
+                          Practica estas frases:
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {activity.promptSet.map((prompt: string, idx: number) => (
@@ -176,11 +176,11 @@ export default function TopicDetail() {
                           className="mt-4"
                           onClick={() => {
                             handleActivityComplete(activity.id);
-                            toast({ title: 'Coming soon!', description: 'AI chat feature will be available soon' });
+                            toast({ title: '¡Próximamente!', description: 'La función de chat IA estará disponible pronto' });
                           }}
                           data-testid={`button-start-chat-${activity.id}`}
                         >
-                          Start Chat Practice
+                          Iniciar práctica de conversación
                         </Button>
                       </div>
                     </CardContent>

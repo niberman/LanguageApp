@@ -11,12 +11,12 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-primary" />
             <div>
-              <div className="font-bold">The Language School</div>
+              <div className="font-bold">La Escuela de Idiomas</div>
               <div className="text-sm text-muted-foreground">{t('footer.tagline')}</div>
             </div>
           </div>
           <div className="text-sm text-muted-foreground">
-            © 2025 The Language School. All rights reserved.
+            © 2025 La Escuela de Idiomas. Todos los derechos reservados.
           </div>
         </div>
       </div>

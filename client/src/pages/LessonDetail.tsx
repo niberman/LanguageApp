@@ -27,7 +27,7 @@ export default function LessonDetail() {
         <Navbar />
         <main className="flex-1 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center py-12">Loading...</div>
+            <div className="text-center py-12">{t('common.loading')}</div>
           </div>
         </main>
         <Footer />
@@ -43,7 +43,7 @@ export default function LessonDetail() {
         <Navbar />
         <main className="flex-1 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center py-12">Lesson not found</div>
+            <div className="text-center py-12">Lección no encontrada</div>
           </div>
         </main>
         <Footer />
@@ -64,7 +64,7 @@ export default function LessonDetail() {
               data-testid="button-back-to-course"
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
-              Back to course
+              {t('lesson.backToCourse')}
             </Button>
           </div>
 
@@ -75,7 +75,7 @@ export default function LessonDetail() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold mb-4">Topics</h2>
+            <h2 className="text-2xl font-semibold mb-4">{t('lesson.topics')}</h2>
             {lesson.topics.map((topic: any) => {
               return (
                 <Card
@@ -90,7 +90,7 @@ export default function LessonDetail() {
                       {topic.summary}
                     </CardDescription>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {topic.activities.length} activities
+                      {topic.activities.length} actividades
                     </p>
                   </CardHeader>
                 </Card>

@@ -3,9 +3,9 @@
 ## Project Overview
 
 A production-ready language learning platform featuring:
-- **17 English foundation levels** with embedded YouTube lessons and Quizlet flashcards
+- **OOP Content Hierarchy** (Course → Lesson → Topic → Activity) with TypeScript class models
 - **Embedded learning content** (Quizlet vocabulary sets, YouTube video lessons)
-- **Progress tracking** with streak counters and completion percentages
+- **Activity completion tracking** with streak counters and progress percentages
 - **Supabase authentication** (email/password + Google OAuth)
 - **Freemium pricing model** (Free tier + Pro tier)
 - **Full bilingual UI** with instant language switching (EN ⇄ ES)
@@ -13,41 +13,54 @@ A production-ready language learning platform featuring:
 
 ## Recent Changes (Latest Session)
 
-### ✅ Removed All Spanish Content
-- Deleted all 12 Spanish levels from database (track='spanish')
-- Removed Spanish track selector from Practice page
-- Cleaned up all Spanish references in LevelDetail and PracticeLevels pages
-- App now focuses exclusively on English language learning with 17 levels
-- **Tested end-to-end:** Practice page shows only English track, all English levels load correctly, embeds work properly
+### ✅ Major Architectural Refactor: OOP Content Model
+**Replaced level-based system with hierarchical object-oriented model:**
 
-### ✅ Fixed Critical Authentication Double-Login Bug
-- Implemented global Supabase singleton using `globalThis.__supabaseClient` to prevent multiple client instances
-- Added initialization promise caching in `globalThis.__supabaseInitPromise` to prevent concurrent duplicate instances during HMR
-- Fixed timing issue with 100ms navigation delay in Auth.tsx to ensure React state updates before redirect
-- Updated queryClient to automatically inject Bearer token auth headers in all API requests
-- Fixed Supabase initialization race condition in both `api.ts` and `queryClient.ts` by awaiting init promise before calling `getSession()`
-- Solution ensures single login flow, persistent session, and prevents "Cannot read properties of undefined" errors
+- **New TypeScript Classes** (`shared/models/`):
+  - `Course` - Top-level learning path (e.g., "Fundamentos de Inglés 1")
+  - `Lesson` - Module within a course (e.g., "Greetings & Introductions")
+  - `Topic` - Specific subject within a lesson (e.g., "Basic Greetings")
+  - `Activity` - Learning exercises (YouTube videos, Quizlet sets, AI chat)
+    - Subclasses: `VideoActivity`, `QuizletActivity`, `AIChatActivity`
 
-### ✅ YouTube Video URL Support with Real iframe Embeds
-- Added `youtubeUrl` field to levels schema for direct video links (in addition to existing playlist support)
-- Implemented automatic video ID extraction from standard YouTube URLs (`youtube.com/watch?v=`) and short links (`youtu.be/`)
-- Supports timestamp parameters (e.g., `t=1483s` converts to `start=1483` in embed URL)
-- Configured English Foundations Level 1 with YouTube lesson: https://www.youtube.com/watch?v=g9BERd6yRLI&t=1483s
-- LevelDetail.tsx gracefully falls back to playlist IDs if video URL not present
-- EmbedFrame component now renders actual `<iframe>` elements instead of placeholders
-- Separate URLs for iframe embed (`https://www.youtube.com/embed/{videoId}?start={timestamp}`) and external links (original YouTube URL)
-- **Successfully tested end-to-end:** Video properly embeds with correct video ID and timestamp, "Open in new tab" works correctly
+- **New Database Schema**:
+  - `courses` - Course metadata (title, description, level, language)
+  - `lessons` - Lessons linked to courses (foreign key)
+  - `topics` - Topics linked to lessons (foreign key)
+  - `activities` - Activities linked to topics (polymorphic: video/quizlet/aiChat)
+  - `activity_completions` - User progress tracking (replaces `progress_events`)
+  - Removed: `levels` table (replaced by 4-tier hierarchy)
 
-### ✅ End-to-End Testing Completed
-All public pages verified working:
-- Home page with hero section and CTA
-- Practice page with English track
-- Level detail pages with embedded YouTube/Quizlet content
-- Settings page with language/theme preferences
-- Pricing page with Free/Pro tiers
-- Language toggle (EN/ES)
-- Dark mode toggle
-- Authentication flow (signup → auto-redirect to dashboard)
+- **New Frontend Pages**:
+  - `/courses` - Browse all available courses
+  - `/courses/:id` - Course detail with lessons list
+  - `/courses/:courseId/lessons/:lessonId` - Lesson detail with topics list
+  - `/courses/:courseId/lessons/:lessonId/topics/:topicId` - Topic detail with activities
+  - Removed: `/practice`, `/practice/:track`, `/practice/:track/:level`
+
+- **Backend API Updates**:
+  - `GET /api/courses` - List all courses
+  - `GET /api/courses/:id` - Get course with full hierarchy (lessons → topics → activities)
+  - `POST /api/completions` - Mark activity as complete
+  - `GET /api/completions` - Get user's completed activities
+  - `GET /api/dashboard/stats` - Dashboard stats (now activity-based, not level-based)
+
+- **Sample Content Seeded**:
+  - Course: "Fundamentos de Inglés 1" (Beginner English)
+  - 2 Lessons: "Greetings & Introductions", "Numbers & Colors"
+  - 3 Topics: "Basic Greetings", "Numbers 1-20", "Common Colors"
+  - 8 Activities: Mix of YouTube videos and Quizlet sets
+
+### ✅ Progress Tracking Refactor
+- Replaced `progress_events` table with `activity_completions`
+- Activities auto-marked complete when user opens external content
+- Dashboard now shows "Completed Activities X/Y" instead of "Completed Levels"
+- Streak calculation based on activity completion dates
+
+### ✅ Navigation Updates
+- Updated Navbar: `/practice` → `/courses`
+- Updated Home page CTA: navigates to `/courses`
+- Updated Dashboard "Continue" button: navigates to `/courses`
 
 ## Tech Stack
 
@@ -66,30 +79,33 @@ All public pages verified working:
 
 **Database Schema:**
 - `profiles` - User profiles with locale preferences
-- `levels` - Course content (track, number, title, Quizlet/YouTube IDs, YouTube URLs)
-- `progress_events` - Activity tracking (quizlet_view, video_watch)
+- `courses` - Top-level courses (title, description, level, language)
+- `lessons` - Lessons within courses
+- `topics` - Topics within lessons
+- `activities` - Learning activities (video, quizlet, aiChat types)
+- `activity_completions` - User activity completion tracking
 - `waitlist_emails` - Newsletter signups
 
 ## Key Features
 
-### 1. Practice System
-- 17 English Foundation levels (1-17)
-- 12 Spanish Foundation levels (1-12)
-- Each level includes:
-  - Quizlet vocabulary sets (embeddable)
-  - YouTube lesson playlists (embeddable)
-  - Progress tracking on completion
+### 1. Course System (NEW OOP Architecture)
+- Hierarchical content: Course → Lesson → Topic → Activity
+- TypeScript class models with proper inheritance
+- Three activity types:
+  - **Video Activities** - Embedded YouTube lessons with timestamps
+  - **Quizlet Activities** - Vocabulary practice sets
+  - **AI Chat Activities** - Conversational practice (coming soon)
 
 ### 2. User Dashboard (Authenticated)
 - Current streak counter (consecutive days active)
 - Last activity timestamp
-- Overall progress percentage
-- Level completion stats
+- Overall progress percentage (activity-based)
+- Activity completion stats (X completed / Y total)
 
 ### 3. Admin Panel (Admin Role Required)
-- Create/edit/delete levels
+- Manage courses, lessons, topics, activities
 - View user analytics
-- Manage content (Quizlet/YouTube IDs)
+- Content management system
 
 ### 4. Bilingual UI
 - Context-based translation system
@@ -101,7 +117,7 @@ All public pages verified working:
 - Email/password signup/signin
 - Google OAuth (configured in Supabase)
 - Protected routes for dashboard/progress
-- Public access to practice content
+- Public access to course content
 
 ## Environment Configuration
 
@@ -124,8 +140,8 @@ The app automatically detects and fixes swapped Supabase URL/Anon Key values:
 
 ### Public
 - `GET /api/config` - Supabase client configuration
-- `GET /api/levels` - List all levels
-- `GET /api/levels/:track/:number` - Get specific level
+- `GET /api/courses` - List all courses
+- `GET /api/courses/:id` - Get course with full content hierarchy
 
 ### Authenticated
 - `POST /api/auth/signup` - Create account
@@ -133,15 +149,12 @@ The app automatically detects and fixes swapped Supabase URL/Anon Key values:
 - `POST /api/auth/signout` - Sign out
 - `GET /api/profile` - Get user profile
 - `PATCH /api/profile` - Update profile
-- `GET /api/progress` - Get user progress
-- `POST /api/progress` - Record progress event
-- `GET /api/progress/streak` - Get streak count
-- `GET /api/dashboard/stats` - Dashboard statistics
+- `POST /api/completions` - Mark activity as complete
+- `GET /api/completions` - Get user's completed activities
+- `GET /api/dashboard/stats` - Dashboard statistics (activity-based)
 
 ### Admin Only
-- `POST /api/levels` - Create level
-- `PATCH /api/levels/:id` - Update level
-- `DELETE /api/levels/:id` - Delete level
+- Course/Lesson/Topic/Activity management endpoints (to be implemented)
 
 ## Development Workflow
 
@@ -153,9 +166,9 @@ Runs both Express backend and Vite frontend on port 5000.
 
 ### Database Operations
 ```bash
-npm run db:migrate  # Run Drizzle migrations
-npm run db:seed     # Seed 29 foundation levels
-npm run db:setup    # Migrate + seed (fresh setup)
+npm run db:push        # Push schema changes to database
+npm run db:seed        # Seed courses with sample content
+npm run db:setup       # Push + seed (fresh setup)
 ```
 
 ## User Preferences
@@ -190,40 +203,32 @@ npm run db:setup    # Migrate + seed (fresh setup)
 **Solution**: Auto-detection system fixes this automatically. Check server logs for "✅ Fixed: URL and Anon Key are now in correct order"
 
 ### Issue: Dashboard shows 0 streak/progress
-**Solution**: User must record progress events (view Quizlet, watch YouTube) to track activity.
+**Solution**: User must complete activities (open YouTube/Quizlet) to track progress.
 
 ## Future Enhancements (Planned)
 
 Phase 2 features with placeholder routes:
-- `/chat` - AI Conversation Partner (Pro tier)
-- `/events` - Community language exchange events
-- `/work` - Job board and Uber driver referral program
-
-## Testing
-
-Comprehensive test coverage includes:
-- ✅ Public page navigation
-- ✅ Bilingual switching (EN/ES)
-- ✅ Dark mode functionality
-- ✅ Level browsing and detail views
-- ✅ Embedded content display
-- ⚠️ Authentication flows (requires manual testing with credentials)
-- ⚠️ Progress tracking (requires authenticated user)
+- AI Conversation Partner (Pro tier)
+- Community language exchange events
+- Job board and Uber driver referral program
 
 ## Architecture Notes
 
-- **Frontend-heavy**: Most logic in React, backend for persistence/auth only
+- **OOP Content Model**: TypeScript classes for Course, Lesson, Topic, Activity with proper inheritance
 - **Type-safe**: Shared schema (`shared/schema.ts`) ensures FE/BE consistency
+- **Hierarchical Loading**: Backend loads full course hierarchy in single query
+- **Activity Tracking**: Completion tracked when user opens external content (YouTube/Quizlet)
 - **Query invalidation**: TanStack Query handles cache updates after mutations
 - **Protected routes**: useAuth hook + redirect logic for auth-required pages
 - **Graceful degradation**: Guest users can browse all content, auth only for progress
 
 ## Maintenance
 
-### Adding New Levels
-1. Sign in as admin → `/admin`
-2. Use "Add New Level" form
-3. Provide: track, number, title, Quizlet IDs, YouTube playlist IDs
+### Adding New Content
+Use the seeding system:
+1. Edit `server/seedCourses.ts`
+2. Add new courses, lessons, topics, activities
+3. Run `npm run db:seed`
 
 ### Updating Translations
 Edit `client/src/contexts/LanguageContext.tsx`:
@@ -232,7 +237,7 @@ Edit `client/src/contexts/LanguageContext.tsx`:
 
 ### Database Migrations
 1. Update `shared/schema.ts`
-2. Run `npm run db:migrate`
+2. Run `npm run db:push` to sync schema
 3. Update API routes and frontend queries
 
 ---

@@ -51,8 +51,6 @@ export default function LessonDetail() {
     );
   }
 
-  const progressPercent = Math.round(lesson.getProgress() * 100);
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -74,17 +72,11 @@ export default function LessonDetail() {
             <h1 className="text-3xl md:text-4xl font-bold mb-2" data-testid="text-lesson-title">
               {lesson.title}
             </h1>
-            
-            <div className="flex items-center gap-4">
-              <Progress value={progressPercent} className="flex-1" data-testid="progress-lesson" />
-              <span className="text-sm text-muted-foreground">{progressPercent}%</span>
-            </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold mb-4">Topics</h2>
             {lesson.topics.map((topic: any) => {
-              const topicProgress = Math.round(topic.getProgress() * 100);
               return (
                 <Card
                   key={topic.id}
@@ -93,21 +85,13 @@ export default function LessonDetail() {
                   data-testid={`card-topic-${topic.id}`}
                 >
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <CardTitle>{topic.title}</CardTitle>
-                        <CardDescription className="mt-2">
-                          {topic.summary}
-                        </CardDescription>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {topic.activities.length} activities
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">{topicProgress}%</div>
-                        <Progress value={topicProgress} className="w-24 mt-1" />
-                      </div>
-                    </div>
+                    <CardTitle>{topic.title}</CardTitle>
+                    <CardDescription className="mt-2">
+                      {topic.summary}
+                    </CardDescription>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {topic.activities.length} activities
+                    </p>
                   </CardHeader>
                 </Card>
               );

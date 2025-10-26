@@ -85,8 +85,8 @@ export default function Dashboard() {
                 />
                 <StatCard
                   icon={Target}
-                  label="Completed Levels"
-                  value={`${stats?.completedLevels || 0}/${stats?.totalLevels || 0}`}
+                  label="Completed Activities"
+                  value={`${stats?.completedActivities || 0}/${stats?.totalActivities || 0}`}
                   accentColor="primary"
                 />
               </div>
@@ -97,7 +97,7 @@ export default function Dashboard() {
                 </h2>
                 <Button
                   size="lg"
-                  onClick={() => setLocation('/practice')}
+                  onClick={() => setLocation('/courses')}
                   data-testid="button-continue-level"
                 >
                   {t('practice.continue')}

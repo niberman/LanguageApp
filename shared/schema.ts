@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, jsonb, uuid, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, jsonb, uuid, boolean, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -53,7 +53,9 @@ export const activityCompletions = pgTable("activity_completions", {
   userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   activityId: uuid("activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   completedAt: timestamp("completed_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  uniqueUserActivity: unique().on(table.userId, table.activityId),
+}));
 
 // Waitlist emails table
 export const waitlistEmails = pgTable("waitlist_emails", {

@@ -49,8 +49,6 @@ export default function CourseDetail() {
     );
   }
 
-  const progressPercent = Math.round(course.getProgress() * 100);
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -73,17 +71,11 @@ export default function CourseDetail() {
               {course.title}
             </h1>
             <p className="text-muted-foreground mb-4">{course.description}</p>
-            
-            <div className="flex items-center gap-4">
-              <Progress value={progressPercent} className="flex-1" data-testid="progress-course" />
-              <span className="text-sm text-muted-foreground">{progressPercent}%</span>
-            </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold mb-4">Lessons</h2>
             {course.lessons.map((lesson: any) => {
-              const lessonProgress = Math.round(lesson.getProgress() * 100);
               return (
                 <Card
                   key={lesson.id}
@@ -92,18 +84,10 @@ export default function CourseDetail() {
                   data-testid={`card-lesson-${lesson.id}`}
                 >
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <CardTitle>{lesson.title}</CardTitle>
-                        <CardDescription className="mt-2">
-                          {lesson.topics.length} topics
-                        </CardDescription>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">{lessonProgress}%</div>
-                        <Progress value={lessonProgress} className="w-24 mt-1" />
-                      </div>
-                    </div>
+                    <CardTitle>{lesson.title}</CardTitle>
+                    <CardDescription className="mt-2">
+                      {lesson.topics.length} topics
+                    </CardDescription>
                   </CardHeader>
                 </Card>
               );

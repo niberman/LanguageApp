@@ -20,6 +20,7 @@ export const levels = pgTable("levels", {
   title: text("title").notNull(),
   quizletSetIds: text("quizlet_set_ids").array().notNull().default(sql`ARRAY[]::text[]`),
   youtubePlaylistIds: text("youtube_playlist_ids").array().notNull().default(sql`ARRAY[]::text[]`),
+  youtubeUrl: text("youtube_url"), // Direct YouTube video URL
 }, (table) => ({
   uniqueTrackNumber: unique().on(table.track, table.number),
 }));

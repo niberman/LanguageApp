@@ -66,7 +66,19 @@ export default function LevelDetail() {
   const trackTitle = params?.track === 'english' ? 'English' : 'Spanish';
   const levelTitle = level?.title || `${trackTitle} Level ${params?.level}`;
   const quizletId = level?.quizletSetIds?.[0] || 'placeholder';
-  const youtubeId = level?.youtubePlaylistIds?.[0] || 'placeholder';
+  
+  // Extract YouTube video ID from URL or use playlist ID
+  let youtubeEmbedUrl = '';
+  if (level?.youtubeUrl) {
+    // Extract video ID from various YouTube URL formats
+    const videoIdMatch = level.youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
+    const videoId = videoIdMatch?.[1] || '';
+    const timestamp = level.youtubeUrl.match(/[?&]t=(\d+)/)?.[1] || '';
+    youtubeEmbedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ''}`;
+  } else {
+    const playlistId = level?.youtubePlaylistIds?.[0] || 'placeholder';
+    youtubeEmbedUrl = `https://youtube.com/playlist?list=${playlistId}`;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -99,7 +111,7 @@ export default function LevelDetail() {
 
             <EmbedFrame
               type="youtube"
-              embedUrl={`https://youtube.com/playlist?list=${youtubeId}`}
+              embedUrl={youtubeEmbedUrl}
               title={t('level.watchVideo')}
               onInteraction={handleVideoWatch}
             />

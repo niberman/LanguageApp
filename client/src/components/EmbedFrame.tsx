@@ -5,14 +5,15 @@ import { ExternalLink } from 'lucide-react';
 interface EmbedFrameProps {
   type: 'quizlet' | 'youtube';
   embedUrl: string;
+  externalUrl?: string;
   title: string;
   onInteraction: () => void;
 }
 
-export default function EmbedFrame({ type, embedUrl, title, onInteraction }: EmbedFrameProps) {
+export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInteraction }: EmbedFrameProps) {
   const handleClick = () => {
     onInteraction();
-    window.open(embedUrl, '_blank');
+    window.open(externalUrl || embedUrl, '_blank');
   };
 
   return (
@@ -29,15 +30,14 @@ export default function EmbedFrame({ type, embedUrl, title, onInteraction }: Emb
           Open in new tab
         </Button>
       </div>
-      <div className="aspect-video bg-muted flex items-center justify-center">
-        <div className="text-center p-8">
-          <p className="text-muted-foreground mb-4">
-            {type === 'quizlet' ? 'Quizlet' : 'YouTube'} embed placeholder
-          </p>
-          <Button onClick={handleClick} data-testid={`button-launch-${type}`}>
-            Launch {type === 'quizlet' ? 'Quizlet' : 'YouTube'}
-          </Button>
-        </div>
+      <div className="aspect-video bg-muted">
+        <iframe
+          src={embedUrl}
+          className="w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          data-testid={`iframe-${type}`}
+        />
       </div>
     </Card>
   );

@@ -3,9 +3,14 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 // Get auth token from Supabase session
 async function getAuthHeaders(): Promise<HeadersInit> {
   try {
+    // Wait for Supabase client initialization
+    if (globalThis.__supabaseInitPromise) {
+      await globalThis.__supabaseInitPromise;
+    }
+    
     // Access global Supabase client
     const client = globalThis.__supabaseClient;
-    if (!client) return {};
+    if (!client || !client.auth) return {};
     
     const { data: { session } } = await client.auth.getSession();
     if (session?.access_token) {

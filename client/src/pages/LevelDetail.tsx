@@ -19,7 +19,7 @@ export default function LevelDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: level } = useQuery({
+  const { data: level, isLoading: levelLoading, error: levelError } = useQuery({
     queryKey: ['/api/levels', params?.track, params?.level],
     queryFn: () => levelApi.getLevel(params?.track || 'english', parseInt(params?.level || '1')),
   });
@@ -69,15 +69,20 @@ export default function LevelDetail() {
   
   // Extract YouTube video ID from URL or use playlist ID
   let youtubeEmbedUrl = '';
+  let youtubeExternalUrl = '';
+  
   if (level?.youtubeUrl) {
     // Extract video ID from various YouTube URL formats
     const videoIdMatch = level.youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
     const videoId = videoIdMatch?.[1] || '';
     const timestamp = level.youtubeUrl.match(/[?&]t=(\d+)/)?.[1] || '';
+    
     youtubeEmbedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ''}`;
+    youtubeExternalUrl = level.youtubeUrl; // Use original URL for external link
   } else {
     const playlistId = level?.youtubePlaylistIds?.[0] || 'placeholder';
-    youtubeEmbedUrl = `https://youtube.com/playlist?list=${playlistId}`;
+    youtubeEmbedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}`;
+    youtubeExternalUrl = `https://youtube.com/playlist?list=${playlistId}`;
   }
 
   return (
@@ -112,6 +117,7 @@ export default function LevelDetail() {
             <EmbedFrame
               type="youtube"
               embedUrl={youtubeEmbedUrl}
+              externalUrl={youtubeExternalUrl}
               title={t('level.watchVideo')}
               onInteraction={handleVideoWatch}
             />

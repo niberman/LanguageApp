@@ -1,11 +1,24 @@
-import { supabase } from './supabase';
-
 async function getAuthHeaders() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return {
-    'Content-Type': 'application/json',
-    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-  };
+  try {
+    // Wait for Supabase client initialization
+    if (globalThis.__supabaseInitPromise) {
+      await globalThis.__supabaseInitPromise;
+    }
+    
+    const client = globalThis.__supabaseClient;
+    if (!client || !client.auth) {
+      return { 'Content-Type': 'application/json' };
+    }
+    
+    const { data: { session } } = await client.auth.getSession();
+    return {
+      'Content-Type': 'application/json',
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    };
+  } catch (error) {
+    console.error('Error getting auth headers:', error);
+    return { 'Content-Type': 'application/json' };
+  }
 }
 
 export async function apiRequest(url: string, options: RequestInit = {}) {

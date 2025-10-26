@@ -13,11 +13,23 @@ A production-ready bilingual (English/Spanish) language learning platform featur
 
 ## Recent Changes (Latest Session)
 
-### ✅ Fixed Environment Variable Configuration
-- Resolved Supabase client initialization issues in Vite frontend
-- Created `/api/config` endpoint to securely expose Supabase credentials to client
-- Implemented promise-based initialization with fallback handling
-- Auto-detection system fixes swapped NEXT_PUBLIC_SUPABASE_URL/ANON_KEY values
+### ✅ Fixed Critical Authentication Double-Login Bug
+- Implemented global Supabase singleton using `globalThis.__supabaseClient` to prevent multiple client instances
+- Added initialization promise caching in `globalThis.__supabaseInitPromise` to prevent concurrent duplicate instances during HMR
+- Fixed timing issue with 100ms navigation delay in Auth.tsx to ensure React state updates before redirect
+- Updated queryClient to automatically inject Bearer token auth headers in all API requests
+- Fixed Supabase initialization race condition in both `api.ts` and `queryClient.ts` by awaiting init promise before calling `getSession()`
+- Solution ensures single login flow, persistent session, and prevents "Cannot read properties of undefined" errors
+
+### ✅ YouTube Video URL Support with Real iframe Embeds
+- Added `youtubeUrl` field to levels schema for direct video links (in addition to existing playlist support)
+- Implemented automatic video ID extraction from standard YouTube URLs (`youtube.com/watch?v=`) and short links (`youtu.be/`)
+- Supports timestamp parameters (e.g., `t=1483s` converts to `start=1483` in embed URL)
+- Configured English Foundations Level 1 with YouTube lesson: https://www.youtube.com/watch?v=g9BERd6yRLI&t=1483s
+- LevelDetail.tsx gracefully falls back to playlist IDs if video URL not present
+- EmbedFrame component now renders actual `<iframe>` elements instead of placeholders
+- Separate URLs for iframe embed (`https://www.youtube.com/embed/{videoId}?start={timestamp}`) and external links (original YouTube URL)
+- **Successfully tested end-to-end:** Video properly embeds with correct video ID and timestamp, "Open in new tab" works correctly
 
 ### ✅ End-to-End Testing Completed
 All public pages verified working:
@@ -28,6 +40,7 @@ All public pages verified working:
 - Pricing page with Free/Pro tiers
 - Language toggle (EN/ES)
 - Dark mode toggle
+- Authentication flow (signup → auto-redirect to dashboard)
 
 ## Tech Stack
 
@@ -46,7 +59,7 @@ All public pages verified working:
 
 **Database Schema:**
 - `profiles` - User profiles with locale preferences
-- `levels` - Course content (track, number, title, Quizlet/YouTube IDs)
+- `levels` - Course content (track, number, title, Quizlet/YouTube IDs, YouTube URLs)
 - `progress_events` - Activity tracking (quizlet_view, video_watch)
 - `waitlist_emails` - Newsletter signups
 

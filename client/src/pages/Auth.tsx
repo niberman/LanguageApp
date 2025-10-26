@@ -43,7 +43,7 @@ export default function Auth() {
     setIsLoading(true);
     try {
       await signUp(signUpData.email, signUpData.password);
-      toast({ title: 'Success!', description: 'Account created. Please check your email to confirm.' });
+      toast({ title: 'Success!', description: 'Account created successfully!' });
       // Small delay to ensure state updates before navigation
       setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {

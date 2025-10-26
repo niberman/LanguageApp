@@ -27,7 +27,7 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
           data-testid={`button-open-${type}`}
         >
           <ExternalLink className="h-4 w-4 mr-2" />
-          Open in new tab
+          Abrir en pestaña nueva
         </Button>
       </div>
       <div className="aspect-video bg-muted">

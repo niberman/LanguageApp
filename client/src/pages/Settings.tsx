@@ -9,7 +9,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function Settings() {
-  const { t, locale, setLocale } = useLanguage();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [displayName, setDisplayName] = useState('John Doe'); //todo: remove mock functionality
 
@@ -19,7 +19,7 @@ export default function Settings() {
       title: 'Ajustes guardados',
       description: 'Tus preferencias han sido actualizadas',
     });
-    console.log('Settings saved:', { displayName, locale });
+    console.log('Settings saved:', { displayName });
   };
 
   return (
@@ -43,26 +43,6 @@ export default function Settings() {
                   className="mt-2"
                   data-testid="input-display-name"
                 />
-              </div>
-
-              <div>
-                <Label>{t('settings.language')}</Label>
-                <div className="flex gap-4 mt-2">
-                  <Button
-                    variant={locale === 'en' ? 'default' : 'outline'}
-                    onClick={() => setLocale('en')}
-                    data-testid="button-language-en"
-                  >
-                    Inglés
-                  </Button>
-                  <Button
-                    variant={locale === 'es' ? 'default' : 'outline'}
-                    onClick={() => setLocale('es')}
-                    data-testid="button-language-es"
-                  >
-                    Español
-                  </Button>
-                </div>
               </div>
 
               <Button onClick={handleSave} className="w-full" data-testid="button-save-settings">

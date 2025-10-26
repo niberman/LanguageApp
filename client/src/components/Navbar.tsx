@@ -3,7 +3,6 @@ import { GraduationCap, LogOut } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import LanguageToggle from './LanguageToggle';
 import { Button } from '@/components/ui/button';
 
 export default function Navbar() {

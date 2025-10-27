@@ -38,6 +38,50 @@ A production-ready language learning platform featuring:
   - Verified both English and Spanish locales render correctly
   - Confirmed dialog opens/closes properly and email submission works
 
+### 📧 Supabase Email Configuration (Spanish)
+
+**To configure password reset emails in Spanish:**
+
+1. Go to **Supabase Dashboard** → Your Project → **Authentication** → **Email Templates**
+2. Select **"Reset Password"** template
+3. Replace the template with Spanish version:
+
+```html
+<h2>Restablecer tu contraseña</h2>
+<p>Hola,</p>
+<p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en La Escuela de Idiomas.</p>
+<p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
+<p><a href="{{ .ConfirmationURL }}">Restablecer contraseña</a></p>
+<p>Este enlace expirará en 60 minutos.</p>
+<p>Si no solicitaste este cambio, ignora este correo.</p>
+<p>Saludos,<br>El equipo de La Escuela de Idiomas</p>
+```
+
+4. Also configure **"Confirm Signup"** and **"Email Change"** templates in Spanish for consistency
+
+**Important Notes:**
+- The redirect URL is configured to: `{your-domain}/auth?reset=true`
+- Add your deployment URL to **Authentication → URL Configuration → Redirect URLs**
+- For local development, add: `http://localhost:5000/**`
+- For production, add: `https://your-repl.replit.app/**`
+
+### ✅ Quizlet Embed Integration (October 2025)
+**Updated Quizlet activities to use proper iframe embed format:**
+
+- **Changed Data Model**:
+  - Updated `QuizletActivity` class to use `embedUrl` instead of `quizletId`
+  - Format: `https://quizlet.com/{id}/flashcards/embed?i=nd4dc&x=1jj1`
+  
+- **Updated Files**:
+  - `shared/models/Activity.ts` - Changed constructor parameter from `quizletId` to `embedUrl`
+  - `server/storage.ts` - Updated to pass `data.embedUrl` to QuizletActivity
+  - `client/src/pages/TopicDetail.tsx` - Simplified to use `activity.embedUrl` directly
+  - `drizzle/seedCourses.ts` - All Quizlet activities now use `embedUrl` in data column
+
+- **Database**:
+  - Re-seeded with proper embed URLs for all 6 Quizlet activities (one per topic)
+  - All embeds use format: `https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1`
+
 ### ✅ Complete Spanish Localization (October 2025)
 **Converted application from bilingual to Spanish-only:**
 

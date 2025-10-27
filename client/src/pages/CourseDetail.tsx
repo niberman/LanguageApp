@@ -35,13 +35,18 @@ export default function CourseDetail() {
     );
   }
 
-  if (!course) {
+  if (!course || course.error || !course.lessons) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center py-12">Curso no encontrado</div>
+            <div className="text-center py-12">
+              <p className="text-xl mb-4">Curso no encontrado</p>
+              <Button onClick={() => setLocation('/courses')}>
+                Volver a cursos
+              </Button>
+            </div>
           </div>
         </main>
         <Footer />

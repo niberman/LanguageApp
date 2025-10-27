@@ -37,11 +37,11 @@ export default function Auth() {
     setIsLoading(true);
     try {
       await signIn(signInData.email, signInData.password);
-      toast({ title: '¡Bienvenido de nuevo!', description: 'Sesión iniciada exitosamente' });
+      toast({ title: t('auth.welcomeBack'), description: t('auth.signedInSuccessfully') });
       // Small delay to ensure state updates before navigation
       setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
       setIsLoading(false);
     }
   };
@@ -49,17 +49,17 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signUpData.password !== signUpData.confirmPassword) {
-      toast({ title: 'Error', description: 'Las contraseñas no coinciden', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('auth.passwordsDoNotMatch'), variant: 'destructive' });
       return;
     }
     setIsLoading(true);
     try {
       await signUp(signUpData.email, signUpData.password);
-      toast({ title: '¡Éxito!', description: '¡Cuenta creada exitosamente!' });
+      toast({ title: t('auth.success'), description: t('auth.accountCreatedSuccessfully') });
       // Small delay to ensure state updates before navigation
       setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
       setIsLoading(false);
     }
   };
@@ -174,7 +174,7 @@ export default function Auth() {
                 </Dialog>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signin">
-                {isLoading ? 'Iniciando sesión...' : t('auth.signInButton')}
+                {isLoading ? t('auth.signingIn') : t('auth.signInButton')}
               </Button>
             </form>
           </TabsContent>
@@ -206,7 +206,7 @@ export default function Auth() {
                 />
               </div>
               <div>
-                <Label htmlFor="signup-confirm-password">Confirmar contraseña</Label>
+                <Label htmlFor="signup-confirm-password">{t('auth.confirmPassword')}</Label>
                 <Input
                   id="signup-confirm-password"
                   type="password"
@@ -218,7 +218,7 @@ export default function Auth() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signup">
-                {isLoading ? 'Creando cuenta...' : t('auth.signUpButton')}
+                {isLoading ? t('auth.creatingAccount') : t('auth.signUpButton')}
               </Button>
             </form>
           </TabsContent>

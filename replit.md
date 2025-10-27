@@ -13,6 +13,31 @@ A production-ready language learning platform featuring:
 
 ## Recent Changes (Latest Session)
 
+### ✅ Password Reset/Forgot Password (October 2025)
+**Implemented full password reset functionality with Supabase integration:**
+
+- **AuthContext Updates**:
+  - Added `resetPassword(email: string)` method using Supabase's `resetPasswordForEmail`
+  - Configured redirect URL to `/auth?reset=true` for post-reset handling
+  - Proper error handling and toast notifications
+
+- **UI Implementation**:
+  - Added "¿Olvidaste tu contraseña?" link below password field on signin tab
+  - Dialog-based UI for password reset request
+  - Separate loading state (`isResetLoading`) to prevent UI state bleed with signin button
+  - Success toast: "¡Correo enviado! Revisa tu correo electrónico para el enlace de restablecimiento"
+
+- **Translations**:
+  - Added complete English and Spanish translations for forgot password flow
+  - Translation keys: `auth.forgotPassword`, `auth.resetPassword`, `auth.resetPasswordButton`, etc.
+  - Added common translations: `common.loading`, `common.error`, `common.notFound`, `common.backToHome`
+  - All error messages now use translation lookups (no hardcoded strings)
+
+- **Testing**:
+  - End-to-end tests passing for forgot password flow
+  - Verified both English and Spanish locales render correctly
+  - Confirmed dialog opens/closes properly and email submission works
+
 ### ✅ Complete Spanish Localization (October 2025)
 **Converted application from bilingual to Spanish-only:**
 

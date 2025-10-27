@@ -16,59 +16,93 @@ async function seedCourses() {
 
     console.log(`✅ Curso creado: ${course1.title}`);
 
-    // Crear lecciones para el curso 1
+    // ========================================
+    // LECCIÓN 1 - SIN NOMBRE (solo "Lección 1")
+    // ========================================
     const [lesson1] = await db
       .insert(schema.lessons)
       .values({
         courseId: course1.id,
-        title: "Lección 1: Saludos y Presentaciones",
+        title: "Lección 1", // ⬅️ CAMBIADO: Sin nombre adicional
         order: 1,
       })
       .returning();
 
-    const [lesson2] = await db
-      .insert(schema.lessons)
-      .values({
-        courseId: course1.id,
-        title: "Lección 2: Números y Conteo",
-        order: 2,
-      })
-      .returning();
+    // ⬅️ ELIMINADO: Lección 2 ya no existe
 
-    console.log(`✅ ${2} lecciones creadas`);
+    console.log(`✅ 1 lección creada`);
 
-    // Crear temas para la lección 1
+    // ========================================
+    // TEMAS PARA LECCIÓN 1 (6 temas nuevos)
+    // ========================================
+    
+    // Tema 1: Presentaciones
     const [topic1] = await db
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
-        title: "Saludos Básicos",
-        summary: "Aprende saludos esenciales en inglés como Hello, Hi, Good morning, etc.",
+        title: "Presentaciones",
+        summary: "Aprende a presentarte y conocer a otras personas en inglés",
       })
       .returning();
 
+    // Tema 2: Preguntas Comunes
     const [topic2] = await db
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
-        title: "Presentándote a Ti Mismo",
-        summary: "Domina las frases necesarias para presentarte: My name is..., I'm from..., etc.",
+        title: "Preguntas Comunes",
+        summary: "Domina las preguntas más frecuentes en conversaciones básicas",
       })
       .returning();
 
-    // Crear temas para la lección 2
+    // Tema 3: Números
     const [topic3] = await db
       .insert(schema.topics)
       .values({
-        lessonId: lesson2.id,
-        title: "Números del 1 al 20",
-        summary: "Aprende a contar del 1 al 20 en inglés",
+        lessonId: lesson1.id,
+        title: "Números",
+        summary: "Aprende a contar y usar números en inglés",
       })
       .returning();
 
-    console.log(`✅ ${3} temas creados`);
+    // Tema 4: Pronunciación
+    const [topic4] = await db
+      .insert(schema.topics)
+      .values({
+        lessonId: lesson1.id,
+        title: "Pronunciación",
+        summary: "Mejora tu pronunciación con sonidos básicos del inglés",
+      })
+      .returning();
 
-    // Crear actividades para el tema 1 (Saludos Básicos)
+    // Tema 5: Cognados
+    const [topic5] = await db
+      .insert(schema.topics)
+      .values({
+        lessonId: lesson1.id,
+        title: "Cognados",
+        summary: "Descubre palabras similares entre español e inglés",
+      })
+      .returning();
+
+    // Tema 6: Despedidas
+    const [topic6] = await db
+      .insert(schema.topics)
+      .values({
+        lessonId: lesson1.id,
+        title: "Despedidas",
+        summary: "Aprende diferentes formas de despedirte en inglés",
+      })
+      .returning();
+
+    console.log(`✅ 6 temas creados`);
+
+    // ========================================
+    // ACTIVIDADES PARA CADA TEMA
+    // ========================================
+
+    // Actividades para Tema 1: Presentaciones
     await db.insert(schema.activities).values([
       {
         topicId: topic1.id,
@@ -84,26 +118,15 @@ async function seedCourses() {
           quizletId: "123456789",
         },
       },
-      {
-        topicId: topic1.id,
-        type: "aiChat",
-        data: {
-          promptSet: [
-            "¡Hola! ¿Cómo estás?",
-            "¡Buenos días! ¿Cuál es tu nombre?",
-            "¡Mucho gusto!",
-          ],
-        },
-      },
     ]);
 
-    // Crear actividades para el tema 2 (Presentándote)
+    // Actividades para Tema 2: Preguntas Comunes
     await db.insert(schema.activities).values([
       {
         topicId: topic2.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example2",
+          videoUrl: "https://www.youtube.com/watch?v=example-questions",
         },
       },
       {
@@ -115,25 +138,79 @@ async function seedCourses() {
       },
     ]);
 
-    // Crear actividades para el tema 3 (Números 1-20)
+    // Actividades para Tema 3: Números
     await db.insert(schema.activities).values([
       {
         topicId: topic3.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example3",
+          videoUrl: "https://www.youtube.com/watch?v=example-numbers",
         },
       },
       {
         topicId: topic3.id,
         type: "quizlet",
         data: {
-          quizletId: "555555555",
+          quizletId: "111111111",
         },
       },
     ]);
 
-    console.log(`✅ ${8} actividades creadas`);
+    // Actividades para Tema 4: Pronunciación
+    await db.insert(schema.activities).values([
+      {
+        topicId: topic4.id,
+        type: "video",
+        data: {
+          videoUrl: "https://www.youtube.com/watch?v=example-pronunciation",
+        },
+      },
+      {
+        topicId: topic4.id,
+        type: "quizlet",
+        data: {
+          quizletId: "222222222",
+        },
+      },
+    ]);
+
+    // Actividades para Tema 5: Cognados
+    await db.insert(schema.activities).values([
+      {
+        topicId: topic5.id,
+        type: "video",
+        data: {
+          videoUrl: "https://www.youtube.com/watch?v=example-cognates",
+        },
+      },
+      {
+        topicId: topic5.id,
+        type: "quizlet",
+        data: {
+          quizletId: "333333333",
+        },
+      },
+    ]);
+
+    // Actividades para Tema 6: Despedidas
+    await db.insert(schema.activities).values([
+      {
+        topicId: topic6.id,
+        type: "video",
+        data: {
+          videoUrl: "https://www.youtube.com/watch?v=example-goodbyes",
+        },
+      },
+      {
+        topicId: topic6.id,
+        type: "quizlet",
+        data: {
+          quizletId: "444444444",
+        },
+      },
+    ]);
+
+    console.log(`✅ 12 actividades creadas (2 por cada tema)`);
     console.log("✨ Datos sembrados exitosamente!");
   } catch (error) {
     console.error("❌ Error al sembrar datos:", error);

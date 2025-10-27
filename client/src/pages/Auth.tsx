@@ -5,6 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap } from 'lucide-react';
@@ -12,10 +21,13 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, resetPassword, user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const [signInData, setSignInData] = useState({ email: '', password: '' });
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
@@ -49,6 +61,32 @@ export default function Auth() {
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast({ 
+        title: t('common.error'), 
+        description: t('auth.email'), 
+        variant: 'destructive' 
+      });
+      return;
+    }
+    setIsResetLoading(true);
+    try {
+      await resetPassword(resetEmail);
+      toast({ 
+        title: t('auth.resetEmailSent'), 
+        description: t('auth.resetEmailSentDescription'),
+      });
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
+    } finally {
+      setIsResetLoading(false);
     }
   };
 
@@ -91,6 +129,49 @@ export default function Auth() {
                   data-testid="input-signin-password"
                   className="mt-2"
                 />
+              </div>
+              <div className="flex justify-end">
+                <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-sm text-muted-foreground hover:text-primary p-0 h-auto"
+                      data-testid="button-forgot-password"
+                    >
+                      {t('auth.forgotPassword')}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent data-testid="dialog-reset-password">
+                    <DialogHeader>
+                      <DialogTitle>{t('auth.resetPassword')}</DialogTitle>
+                      <DialogDescription>
+                        {t('auth.enterEmailToReset')}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleResetPassword}>
+                      <div className="space-y-4 py-4">
+                        <div>
+                          <Label htmlFor="reset-email">{t('auth.email')}</Label>
+                          <Input
+                            id="reset-email"
+                            type="email"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            required
+                            data-testid="input-reset-email"
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" disabled={isResetLoading} data-testid="button-send-reset-email">
+                          {isResetLoading ? t('common.loading') : t('auth.resetPasswordButton')}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signin">
                 {isLoading ? 'Iniciando sesión...' : t('auth.signInButton')}

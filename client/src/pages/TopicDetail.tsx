@@ -1,25 +1,33 @@
-import { useLocation, useRoute } from 'wouter';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { ChevronLeft, Video, BookOpenCheck, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import EmbedFrame from '@/components/EmbedFrame';
-import { queryClient } from '@/lib/queryClient';
+import { useLocation, useRoute } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { ChevronLeft, Video, BookOpenCheck, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import EmbedFrame from "@/components/EmbedFrame";
+import { queryClient } from "@/lib/queryClient";
 
 export default function TopicDetail() {
-  const [, params] = useRoute('/courses/:courseId/lessons/:lessonId/topics/:topicId');
+  const [, params] = useRoute(
+    "/courses/:courseId/lessons/:lessonId/topics/:topicId",
+  );
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const { data: course, isLoading } = useQuery({
-    queryKey: ['/api/courses', params?.courseId],
+    queryKey: ["/api/courses", params?.courseId],
     queryFn: async () => {
       const res = await fetch(`/api/courses/${params?.courseId}`);
       return res.json();
@@ -29,17 +37,17 @@ export default function TopicDetail() {
   const completeActivity = useMutation({
     mutationFn: async (activityId: string) => {
       const res = await fetch(`/api/activities/${activityId}/complete`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await getAuthToken()}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${await getAuthToken()}`,
         },
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/completions'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/completions"] });
     },
   });
 
@@ -48,9 +56,11 @@ export default function TopicDetail() {
       await globalThis.__supabaseInitPromise;
     }
     const client = globalThis.__supabaseClient;
-    if (!client || !client.auth) return '';
-    const { data: { session } } = await client.auth.getSession();
-    return session?.access_token || '';
+    if (!client || !client.auth) return "";
+    const {
+      data: { session },
+    } = await client.auth.getSession();
+    return session?.access_token || "";
   };
 
   if (isLoading || !course) {
@@ -59,7 +69,7 @@ export default function TopicDetail() {
         <Navbar />
         <main className="flex-1 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center py-12">{t('common.loading')}</div>
+            <div className="text-center py-12">{t("common.loading")}</div>
           </div>
         </main>
         <Footer />
@@ -86,12 +96,18 @@ export default function TopicDetail() {
 
   const handleActivityComplete = (activityId: string) => {
     if (!user) {
-      toast({ title: 'Por favor inicia sesión', description: 'Inicia sesión para seguir tu progreso' });
-      setLocation('/auth');
+      toast({
+        title: "Por favor inicia sesión",
+        description: "Inicia sesión para seguir tu progreso",
+      });
+      setLocation("/auth");
       return;
     }
     completeActivity.mutate(activityId);
-    toast({ title: '¡Progreso guardado!', description: 'Actividad marcada como completada' });
+    toast({
+      title: "¡Progreso guardado!",
+      description: "Actividad marcada como completada",
+    });
   };
 
   return (
@@ -103,16 +119,23 @@ export default function TopicDetail() {
           <div className="mb-8">
             <Button
               variant="ghost"
-              onClick={() => setLocation(`/courses/${params?.courseId}/lessons/${params?.lessonId}`)}
+              onClick={() =>
+                setLocation(
+                  `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
+                )
+              }
               data-testid="button-back-to-lesson"
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
-              {t('topic.backToLesson')}
+              {t("topic.backToLesson")}
             </Button>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2" data-testid="text-topic-title">
+            <h1
+              className="text-3xl md:text-4xl font-bold mb-2"
+              data-testid="text-topic-title"
+            >
               {topic.title}
             </h1>
             <p className="text-muted-foreground">{topic.summary}</p>
@@ -120,17 +143,19 @@ export default function TopicDetail() {
 
           <div className="space-y-6">
             {topic.activities.map((activity: any) => {
-              if (activity.type === 'video') {
-                const videoIdMatch = activity.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
-                const videoId = videoIdMatch?.[1] || '';
+              if (activity.type === "video") {
+                const videoIdMatch = activity.videoUrl.match(
+                  /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/,
+                );
+                const videoId = videoIdMatch?.[1] || "";
                 const timestampMatch = activity.videoUrl.match(/[?&]t=(\d+)/);
-                const timestamp = timestampMatch?.[1] || '';
-                
+                const timestamp = timestampMatch?.[1] || "";
+
                 return (
                   <EmbedFrame
                     key={activity.id}
                     type="youtube"
-                    embedUrl={`https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ''}`}
+                    embedUrl={`https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ""}`}
                     externalUrl={activity.videoUrl}
                     title="Ver lección en video"
                     onInteraction={() => handleActivityComplete(activity.id)}
@@ -138,21 +163,28 @@ export default function TopicDetail() {
                 );
               }
 
-              if (activity.type === 'quizlet') {
+              if (activity.type === "quizlet") {
+                const embedUrl =
+                  activity.data?.embedUrl ||
+                  `https://quizlet.com/${activity.data?.quizletId}/flashcards/embed`;
+
                 return (
                   <EmbedFrame
                     key={activity.id}
                     type="quizlet"
-                    embedUrl={`https://quizlet.com/${activity.quizletId}`}
+                    embedUrl={embedUrl}
                     title="Practicar con Quizlet"
                     onInteraction={() => handleActivityComplete(activity.id)}
                   />
                 );
               }
 
-              if (activity.type === 'aiChat') {
+              if (activity.type === "aiChat") {
                 return (
-                  <Card key={activity.id} data-testid={`card-activity-${activity.id}`}>
+                  <Card
+                    key={activity.id}
+                    data-testid={`card-activity-${activity.id}`}
+                  >
                     <CardHeader>
                       <div className="flex items-center gap-3">
                         <MessageSquare className="h-6 w-6 text-primary" />
@@ -168,15 +200,23 @@ export default function TopicDetail() {
                           Practica estas frases:
                         </p>
                         <ul className="list-disc list-inside space-y-1">
-                          {activity.promptSet.map((prompt: string, idx: number) => (
-                            <li key={idx} className="text-sm">{prompt}</li>
-                          ))}
+                          {activity.promptSet.map(
+                            (prompt: string, idx: number) => (
+                              <li key={idx} className="text-sm">
+                                {prompt}
+                              </li>
+                            ),
+                          )}
                         </ul>
                         <Button
                           className="mt-4"
                           onClick={() => {
                             handleActivityComplete(activity.id);
-                            toast({ title: '¡Próximamente!', description: 'La función de chat IA estará disponible pronto' });
+                            toast({
+                              title: "¡Próximamente!",
+                              description:
+                                "La función de chat IA estará disponible pronto",
+                            });
                           }}
                           data-testid={`button-start-chat-${activity.id}`}
                         >

@@ -10,7 +10,8 @@ async function seedCourses() {
       .insert(schema.courses)
       .values({
         title: "Fundamentos de Inglés 1",
-        description: "Curso introductorio de inglés que cubre los conceptos básicos de saludos, presentaciones y vocabulario esencial",
+        description:
+          "Curso introductorio de inglés que cubre los conceptos básicos de saludos, presentaciones y vocabulario esencial",
       })
       .returning();
 
@@ -35,7 +36,7 @@ async function seedCourses() {
     // ========================================
     // TEMAS PARA LECCIÓN 1 (6 temas nuevos)
     // ========================================
-    
+
     // Tema 1: Presentaciones
     const [topic1] = await db
       .insert(schema.topics)
@@ -52,7 +53,8 @@ async function seedCourses() {
       .values({
         lessonId: lesson1.id,
         title: "Preguntas Comunes",
-        summary: "Domina las preguntas más frecuentes en conversaciones básicas",
+        summary:
+          "Domina las preguntas más frecuentes en conversaciones básicas",
       })
       .returning();
 
@@ -115,7 +117,8 @@ async function seedCourses() {
         topicId: topic1.id,
         type: "quizlet",
         data: {
-          quizletId: "123456789",
+          embedUrl:
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);

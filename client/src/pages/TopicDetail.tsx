@@ -164,15 +164,12 @@ export default function TopicDetail() {
               }
 
               if (activity.type === "quizlet") {
-                const embedUrl =
-                  activity.data?.embedUrl ||
-                  `https://quizlet.com/${activity.data?.quizletId}/flashcards/embed`;
-
                 return (
                   <EmbedFrame
                     key={activity.id}
                     type="quizlet"
-                    embedUrl={embedUrl}
+                    embedUrl={activity.embedUrl}
+                    externalUrl={activity.embedUrl.replace('/embed', '').split('?')[0]}
                     title="Practicar con Quizlet"
                     onInteraction={() => handleActivityComplete(activity.id)}
                   />

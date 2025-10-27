@@ -23,7 +23,7 @@ export class VideoActivity extends Activity {
 export class QuizletActivity extends Activity {
   constructor(
     id: string,
-    public quizletId: string,
+    public embedUrl: string,
     completed = false
   ) {
     super(id, "quizlet", completed);

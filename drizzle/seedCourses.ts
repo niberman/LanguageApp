@@ -129,14 +129,15 @@ async function seedCourses() {
         topicId: topic2.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example-questions",
+          videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI&t=2000s",
         },
       },
       {
         topicId: topic2.id,
         type: "quizlet",
         data: {
-          quizletId: "987654321",
+          embedUrl:
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);
@@ -147,14 +148,15 @@ async function seedCourses() {
         topicId: topic3.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example-numbers",
+          videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI&t=2500s",
         },
       },
       {
         topicId: topic3.id,
         type: "quizlet",
         data: {
-          quizletId: "111111111",
+          embedUrl:
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);
@@ -165,14 +167,15 @@ async function seedCourses() {
         topicId: topic4.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example-pronunciation",
+          videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI&t=3000s",
         },
       },
       {
         topicId: topic4.id,
         type: "quizlet",
         data: {
-          quizletId: "222222222",
+          embedUrl:
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);
@@ -183,14 +186,15 @@ async function seedCourses() {
         topicId: topic5.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example-cognates",
+          videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI&t=3500s",
         },
       },
       {
         topicId: topic5.id,
         type: "quizlet",
         data: {
-          quizletId: "333333333",
+          embedUrl:
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);
@@ -201,14 +205,15 @@ async function seedCourses() {
         topicId: topic6.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=example-goodbyes",
+          videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI&t=4000s",
         },
       },
       {
         topicId: topic6.id,
         type: "quizlet",
         data: {
-          quizletId: "444444444",
+          embedUrl:
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);

@@ -125,7 +125,7 @@ export class DbStorage implements IStorage {
               activityModel = new VideoActivity(activity.id, data.videoUrl);
               break;
             case 'quizlet':
-              activityModel = new QuizletActivity(activity.id, data.quizletId);
+              activityModel = new QuizletActivity(activity.id, data.embedUrl);
               break;
             case 'aiChat':
               activityModel = new AIChatActivity(activity.id, data.promptSet);

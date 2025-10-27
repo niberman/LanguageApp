@@ -226,12 +226,20 @@ async function seedCourses() {
   }
 }
 
-seedCourses()
-  .then(() => {
-    console.log("🎉 ¡Siembra completada!");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("💥 Siembra fallida:", error);
-    process.exit(1);
-  });
+// Export for use in API endpoint
+export async function seedDatabase() {
+  return seedCourses();
+}
+
+// Run if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seedCourses()
+    .then(() => {
+      console.log("🎉 ¡Siembra completada!");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("💥 Siembra fallida:", error);
+      process.exit(1);
+    });
+}

@@ -252,6 +252,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin seed endpoint - PUBLIC for easy database seeding
+  app.post("/api/admin/seed", async (req, res) => {
+    try {
+      console.log("🌱 Starting database seed...");
+      
+      // Check if courses already exist
+      const existingCourses = await storage.getAllCourses();
+      if (existingCourses.length > 0) {
+        return res.json({ 
+          success: true, 
+          message: `Base de datos ya tiene ${existingCourses.length} curso(s). No se requiere sembrar.`,
+          courses: existingCourses.length
+        });
+      }
+
+      // Import and run seed
+      const { seedDatabase } = await import("../drizzle/seedCourses");
+      await seedDatabase();
+      
+      const courses = await storage.getAllCourses();
+      
+      res.json({ 
+        success: true, 
+        message: "✅ Base de datos sembrada exitosamente",
+        courses: courses.length
+      });
+    } catch (error: any) {
+      console.error('Seed error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

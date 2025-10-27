@@ -10,7 +10,7 @@ export default function Courses() {
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
 
-  const { data: courses = [], isLoading } = useQuery<any[]>({
+  const { data: courses = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/courses'],
   });
 
@@ -25,7 +25,20 @@ export default function Courses() {
           </h1>
 
           {isLoading ? (
-            <div className="text-center py-12">{t('common.loading')}</div>
+            <div className="text-center py-12" data-testid="text-loading">
+              {t('common.loading')}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12" data-testid="text-error">
+              <p className="text-destructive mb-4">{t('common.error')}</p>
+              <p className="text-sm text-muted-foreground">
+                {error instanceof Error ? error.message : 'Error al cargar los cursos'}
+              </p>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="text-center py-12" data-testid="text-no-courses">
+              <p className="text-muted-foreground">No hay cursos disponibles en este momento.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {courses.map((course: any) => (

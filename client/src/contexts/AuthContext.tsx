@@ -117,9 +117,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const client = supabaseRef.current || await getSupabase();
-    const { error } = await client.auth.signOut();
-    if (error) throw error;
+    try {
+      const client = supabaseRef.current || await getSupabase();
+      await client.auth.signOut();
+    } catch (error) {
+      // Ignore session errors during signout - still clear local state
+      console.log('SignOut: clearing local session');
+    } finally {
+      // Always clear local state
+      setSession(null);
+      setUser(null);
+    }
   };
 
   const resetPassword = async (email: string) => {

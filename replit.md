@@ -74,7 +74,14 @@
 
 ## System Architecture
 
-The application is built with a React 18 frontend (TypeScript, Tailwind CSS, shadcn/ui, Wouter, TanStack Query) and an Express.js backend (Drizzle ORM, PostgreSQL via Supabase).
+The application uses a **hybrid database architecture**:
+
+- **Frontend**: React 18 (TypeScript, Tailwind CSS, shadcn/ui, Wouter, TanStack Query)
+- **Backend**: Express.js (Drizzle ORM)
+- **Authentication**: Supabase Auth (email/password, Google OAuth, password reset)
+- **Database**: Replit PostgreSQL (all application data - courses, lessons, activities, progress)
+
+**Important**: Supabase is used ONLY for authentication. All course content and user progress data is stored in Replit's PostgreSQL database, not in Supabase's database. This is why you won't see application tables when viewing the Supabase dashboard - it only shows auth-related data (users, sessions).
 
 ### UI/UX Decisions
 The UI is exclusively in Spanish, with a dark mode option and theme persistence. It features a clean, responsive design based on shadcn/ui components with custom theming, adhering to a Material Design-inspired aesthetic with a warm color palette.

@@ -196,6 +196,49 @@ Placeholder routes are included for:
 - **Validation**: Zod
 - **Icons**: Lucide React
 
+## 🔑 Password Reset Configuration
+
+### Supabase Redirect URL Setup
+
+For password reset emails to work correctly, configure these in **Supabase Dashboard → Authentication → URL Configuration**:
+
+**Production Site URL:**
+```
+https://workspace.david2792.repl.co
+```
+
+**Redirect URLs (add all):**
+```
+https://workspace.david2792.repl.co/auth*
+https://workspace.david2792.repl.co/auth?reset=true
+http://localhost:5000/auth*
+http://localhost:5000/auth?reset=true
+```
+
+**Why this is needed:**
+- Supabase sends password reset links that redirect users back to your app
+- Without proper configuration, links redirect to `localhost:3000` (Supabase's default)
+- The `?reset=true` parameter triggers the password update UI in the app
+
+### Optional: Customize Email Template (Spanish)
+
+In **Authentication → Email Templates → Reset Password**, use:
+
+```html
+<h2>Restablece tu contraseña</h2>
+<p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
+<p><a href="{{ .ConfirmationURL }}">Restablecer contraseña</a></p>
+```
+
+## 🗄️ Database Architecture
+
+**Important:** This app uses a hybrid database approach:
+
+- **Supabase**: Authentication ONLY (users, sessions, password reset)
+- **Replit PostgreSQL**: All application data (courses, lessons, activities, progress)
+
+When you check your Supabase dashboard, you'll only see authentication-related tables, not your course content. This is by design!
+
 ## 🐛 Troubleshooting
 
 ### Supabase client not initialized

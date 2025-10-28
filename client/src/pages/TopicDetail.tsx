@@ -144,19 +144,39 @@ export default function TopicDetail() {
           <div className="space-y-6">
             {topic.activities.map((activity: any) => {
               if (activity.type === "video") {
-                const videoIdMatch = activity.videoUrl.match(
-                  /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/,
-                );
-                const videoId = videoIdMatch?.[1] || "";
+                // Extract video ID from various YouTube URL formats
+                let videoId = "";
+                let timestamp = "";
+                
+                // Handle embed URLs: https://www.youtube.com/embed/VIDEO_ID
+                if (activity.videoUrl.includes('/embed/')) {
+                  const embedMatch = activity.videoUrl.match(/\/embed\/([^?&]+)/);
+                  videoId = embedMatch?.[1] || "";
+                }
+                // Handle watch URLs: https://www.youtube.com/watch?v=VIDEO_ID
+                else if (activity.videoUrl.includes('watch?v=')) {
+                  const watchMatch = activity.videoUrl.match(/watch\?v=([^&]+)/);
+                  videoId = watchMatch?.[1] || "";
+                }
+                // Handle short URLs: https://youtu.be/VIDEO_ID
+                else if (activity.videoUrl.includes('youtu.be/')) {
+                  const shortMatch = activity.videoUrl.match(/youtu\.be\/([^?&]+)/);
+                  videoId = shortMatch?.[1] || "";
+                }
+                
+                // Extract timestamp if present
                 const timestampMatch = activity.videoUrl.match(/[?&]t=(\d+)/);
-                const timestamp = timestampMatch?.[1] || "";
+                timestamp = timestampMatch?.[1] || "";
+
+                const embedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ""}`;
+                const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
                 return (
                   <EmbedFrame
                     key={activity.id}
                     type="youtube"
-                    embedUrl={`https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ""}`}
-                    externalUrl={activity.videoUrl}
+                    embedUrl={embedUrl}
+                    externalUrl={watchUrl}
                     title="Ver lección en video"
                     onInteraction={() => handleActivityComplete(activity.id)}
                   />

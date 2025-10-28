@@ -6,6 +6,14 @@
 
 ## Recent Changes
 
+### ✅ Password Reset Persistence Fix (October 28, 2025)
+**Fixed password reset page redirecting to login:**
+
+- **Problem**: Password reset link from email would briefly show the password update form, then immediately redirect to login page
+- **Root Cause**: Supabase clears URL hash after processing recovery token, causing the app to lose track of the password reset flow
+- **Solution**: Password reset state now persists once detected, preventing unwanted redirects
+- **Result**: Users can now reliably update their password after clicking the reset link
+
 ### ✅ User-Friendly Dashboard & Real Admin Analytics (October 28, 2025)
 **Enhanced for maximum simplicity and added real SQL-based admin reporting:**
 
@@ -17,6 +25,7 @@
   - Each card includes encouraging, motivational text
   - Quick access buttons for courses and settings
   - All text in simple, clear Spanish
+  - All icons from Lucide React (no emojis per design guidelines)
 
 - **Removed Pricing**:
   - Removed pricing link from navigation
@@ -28,12 +37,14 @@
   - User table showing: name, streak, activities, last activity, registration date
   - All data pulled from PostgreSQL in real-time
   - Removed all mock/placeholder data
+  - Frontend sends Authorization header with session token
 
 - **Files Modified**:
   - `client/src/components/Navbar.tsx` - Removed pricing link
   - `client/src/pages/Dashboard.tsx` - Complete redesign for user-friendliness
-  - `client/src/pages/Admin.tsx` - Real analytics display
+  - `client/src/pages/Admin.tsx` - Real analytics display with auth headers
   - `server/routes.ts` - Added protected admin analytics endpoint
+  - `client/src/pages/Auth.tsx` - Fixed password reset persistence
 
 ### ✅ UX Improvements: Activity Ordering, Next Topic Navigation & Password Reset Fix (October 28, 2025)
 **Enhanced user experience with better content flow and reliable authentication:**

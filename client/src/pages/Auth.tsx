@@ -42,14 +42,13 @@ export default function Auth() {
     const hasRecoveryType = window.location.hash.includes('type=recovery');
     
     // ONLY show password reset form for actual recovery flows:
-    // Must have type=recovery in hash AND either:
-    // - The reset=true query param, OR
-    // - An active session (recovery session from Supabase)
-    if (hasRecoveryType && (isResetParam || session)) {
+    // Must have type=recovery in hash AND reset=true query param
+    // OR if we already have a session with reset=true (recovery session persists)
+    if (hasRecoveryType || (isResetParam && session)) {
       setIsPasswordReset(true);
-    } else {
-      setIsPasswordReset(false);
     }
+    // IMPORTANT: Don't set to false here - once we detect recovery, stay in password reset mode
+    // The form will handle navigation after successful password update
   }, [searchString, session]);
 
   const handleSignIn = async (e: React.FormEvent) => {

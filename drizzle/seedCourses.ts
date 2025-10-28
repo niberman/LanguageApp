@@ -58,7 +58,7 @@ async function seedCourses() {
       })
       .returning();
 
-    // Tema 3: Números
+    // Tema 3: Números/*
     const [topic3] = await db
       .insert(schema.topics)
       .values({
@@ -129,15 +129,14 @@ async function seedCourses() {
         topicId: topic2.id,
         type: "video",
         data: {
-          videoUrl: "https://www.youtube.com/watch?v=g9BERd6yRLI&t=2000s",
+          videoUrl: "https://www.youtube.com/watch?v=F_uXNeQd0Ok",
         },
       },
       {
         topicId: topic2.id,
         type: "quizlet",
         data: {
-          embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
+          embedUrl: "https://quizlet.com/1098715669/match/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);

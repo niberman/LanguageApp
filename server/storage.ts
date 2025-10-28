@@ -124,9 +124,6 @@ export class DbStorage implements IStorage {
             END`
           );
 
-        // Debug: Log the order of activities
-        console.log(`Topic ${topic.id} activities:`, activityResults.map(a => ({ type: a.type, id: a.id.substring(0, 8) })));
-        
         for (const activity of activityResults) {
           let activityModel;
           const data = activity.data as any;

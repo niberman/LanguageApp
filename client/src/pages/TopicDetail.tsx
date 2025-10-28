@@ -94,14 +94,9 @@ export default function TopicDetail() {
     );
   }
 
-  // Sort activities: videos first, then quizlet, then AI chat
-  // This ensures users see instructional videos before practice exercises
-  const sortedActivities = [...topic.activities].sort((a, b) => {
-    const order = { video: 0, quizlet: 1, aiChat: 2 };
-    const orderA = order[a.type as keyof typeof order] ||  999;
-    const orderB = order[b.type as keyof typeof order] || 999;
-    return orderA - orderB;
-  });
+  // Activities are already sorted by backend (video → quizlet → aiChat)
+  // No need to sort again on frontend
+  const sortedActivities = topic.activities;
 
   // Find next topic for navigation
   const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);

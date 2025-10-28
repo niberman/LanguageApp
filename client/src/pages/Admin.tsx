@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { Users, Activity, TrendingUp, Calendar, Flame, Database, CheckCircle, XCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -31,19 +34,19 @@ function DatabaseSeedSection() {
 
       if (data.success) {
         toast({
-          title: '✅ Éxito',
+          title: 'Éxito',
           description: data.message,
         });
       } else {
         toast({
-          title: '❌ Error',
+          title: 'Error',
           description: data.error || 'Error al sembrar la base de datos',
           variant: 'destructive',
         });
       }
     } catch (error: any) {
       toast({
-        title: '❌ Error',
+        title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
@@ -61,7 +64,8 @@ function DatabaseSeedSection() {
         className="w-full"
         data-testid="button-seed"
       >
-        {loading ? 'Sembrando...' : '🌱 Sembrar Base de Datos'}
+        <Database className="mr-2 h-4 w-4" />
+        {loading ? 'Sembrando...' : 'Sembrar Base de Datos'}
       </Button>
 
       {result && (
@@ -91,28 +95,37 @@ function DatabaseSeedSection() {
 export default function Admin() {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [newLevel, setNewLevel] = useState({
-    track: 'english',
-    number: '',
-    title: '',
-    quizletId: '',
-    youtubeId: '',
+  const { session } = useAuth();
+
+  // Fetch admin analytics (with authentication)
+  const { data: analytics, isLoading } = useQuery({
+    queryKey: ['/api/admin/analytics'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/analytics', {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch analytics');
+      return res.json();
+    },
+    enabled: !!session,
   });
 
-  //todo: remove mock functionality
-  const mockUsers = [
-    { id: 1, name: 'John Doe', lastActivity: '2 hours ago', streak: 7 },
-    { id: 2, name: 'Jane Smith', lastActivity: '1 day ago', streak: 3 },
-  ];
-
-  const handleAddLevel = () => {
-    //todo: remove mock functionality
-    toast({
-      title: 'Level added',
-      description: `${newLevel.title} has been created`,
-    });
-    console.log('New level:', newLevel);
-    setNewLevel({ track: 'english', number: '', title: '', quizletId: '', youtubeId: '' });
+  const formatDate = (date: string | null) => {
+    if (!date) return 'Nunca';
+    const d = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Justo ahora';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours}h`;
+    if (diffDays < 7) return `Hace ${diffDays}d`;
+    return d.toLocaleDateString('es-ES');
   };
 
   return (
@@ -125,18 +138,130 @@ export default function Admin() {
             {t('admin.title')}
           </h1>
 
-          <Tabs defaultValue="database">
+          {/* Platform Stats Overview */}
+          {!isLoading && analytics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analytics.platformStats.totalUsers}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analytics.platformStats.activeUsers}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {analytics.platformStats.totalUsers > 0
+                      ? `${Math.round((analytics.platformStats.activeUsers / analytics.platformStats.totalUsers) * 100)}% del total`
+                      : '0%'}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Actividades Completadas</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analytics.platformStats.totalCompletions}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Promedio por Usuario</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analytics.platformStats.avgCompletionsPerUser}</div>
+                  <p className="text-xs text-muted-foreground">actividades</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <Tabs defaultValue="users">
             <TabsList className="mb-6">
+              <TabsTrigger value="users" data-testid="tab-users">
+                Usuarios y Actividad
+              </TabsTrigger>
               <TabsTrigger value="database" data-testid="tab-database">
                 Base de Datos
               </TabsTrigger>
-              <TabsTrigger value="levels" data-testid="tab-levels">
-                {t('admin.levels')}
-              </TabsTrigger>
-              <TabsTrigger value="users" data-testid="tab-users">
-                {t('admin.users')}
-              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="users">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Actividad de Usuarios</CardTitle>
+                  <CardDescription>
+                    Todos los usuarios registrados y sus estadísticas de aprendizaje
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Cargando datos...</p>
+                    </div>
+                  ) : analytics && analytics.users.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-3 px-4 font-semibold">Usuario</th>
+                            <th className="text-left py-3 px-4 font-semibold">Racha</th>
+                            <th className="text-left py-3 px-4 font-semibold">Actividades</th>
+                            <th className="text-left py-3 px-4 font-semibold">Última Actividad</th>
+                            <th className="text-left py-3 px-4 font-semibold">Registrado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analytics.users.map((user: any) => (
+                            <tr key={user.id} className="border-b hover-elevate" data-testid={`row-user-${user.id}`}>
+                              <td className="py-3 px-4">
+                                <div className="font-medium">{user.displayName}</div>
+                                <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                  {user.id.substring(0, 8)}...
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <Flame className="h-4 w-4 text-orange-500" />
+                                  <span className="font-semibold text-orange-500">
+                                    {user.streak} días
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className="font-semibold">{user.totalActivities}</span>
+                              </td>
+                              <td className="py-3 px-4 text-sm text-muted-foreground">
+                                {formatDate(user.lastActivity)}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-muted-foreground">
+                                {new Date(user.createdAt).toLocaleDateString('es-ES')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-muted-foreground">No hay usuarios registrados todavía</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="database">
               <Card className="p-6">
@@ -149,101 +274,6 @@ export default function Admin() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="levels">
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Add New Level</h2>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="track">Track</Label>
-                      <select
-                        id="track"
-                        className="w-full mt-2 px-3 py-2 border rounded-md bg-background"
-                        value={newLevel.track}
-                        onChange={(e) => setNewLevel({ ...newLevel, track: e.target.value })}
-                        data-testid="select-track"
-                      >
-                        <option value="english">English</option>
-                        <option value="spanish">Spanish</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="number">Level Number</Label>
-                      <Input
-                        id="number"
-                        type="number"
-                        value={newLevel.number}
-                        onChange={(e) => setNewLevel({ ...newLevel, number: e.target.value })}
-                        className="mt-2"
-                        data-testid="input-level-number"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={newLevel.title}
-                      onChange={(e) => setNewLevel({ ...newLevel, title: e.target.value })}
-                      className="mt-2"
-                      data-testid="input-level-title"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="quizlet">Quizlet Set ID</Label>
-                    <Input
-                      id="quizlet"
-                      value={newLevel.quizletId}
-                      onChange={(e) => setNewLevel({ ...newLevel, quizletId: e.target.value })}
-                      className="mt-2"
-                      data-testid="input-quizlet-id"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="youtube">YouTube Playlist ID</Label>
-                    <Input
-                      id="youtube"
-                      value={newLevel.youtubeId}
-                      onChange={(e) => setNewLevel({ ...newLevel, youtubeId: e.target.value })}
-                      className="mt-2"
-                      data-testid="input-youtube-id"
-                    />
-                  </div>
-
-                  <Button onClick={handleAddLevel} data-testid="button-add-level">
-                    Add Level
-                  </Button>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="users">
-              <Card className="p-6">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4">Name</th>
-                        <th className="text-left py-3 px-4">Last Activity</th>
-                        <th className="text-left py-3 px-4">Streak</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mockUsers.map((user) => (
-                        <tr key={user.id} className="border-b" data-testid={`row-user-${user.id}`}>
-                          <td className="py-3 px-4">{user.name}</td>
-                          <td className="py-3 px-4">{user.lastActivity}</td>
-                          <td className="py-3 px-4">{user.streak} days</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-            </TabsContent>
           </Tabs>
         </div>
       </main>

@@ -14,7 +14,6 @@ export default function Navbar() {
     { path: '/', label: t('nav.home') },
     { path: '/courses', label: t('nav.practice') },
     ...(user ? [{ path: '/dashboard', label: t('nav.dashboard') }] : []),
-    { path: '/pricing', label: t('nav.pricing') },
   ];
 
   const handleSignOut = async () => {

@@ -1,8 +1,10 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, db } from "./storage";
 import { supabaseAdmin, getSupabaseClient } from "./lib/supabase";
 import { insertWaitlistEmailSchema } from "@shared/schema";
+import * as schema from "@shared/schema";
+import { desc } from "drizzle-orm";
 import { z } from "zod";
 
 interface AuthRequest extends Request {
@@ -248,6 +250,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Dashboard stats error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin analytics endpoint - Get all user data (PROTECTED)
+  app.get("/api/admin/analytics", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      // Get all profiles
+      const profiles = await db.select().from(schema.profiles);
+      
+      // Get all activity completions with user info
+      const allCompletions = await db
+        .select()
+        .from(schema.activityCompletions)
+        .orderBy(desc(schema.activityCompletions.completedAt));
+      
+      // Build user analytics
+      const userAnalytics = await Promise.all(
+        profiles.map(async (profile: any) => {
+          const userCompletions = await storage.getUserCompletions(profile.id);
+          const streak = await storage.getUserStreak(profile.id);
+          
+          return {
+            id: profile.id,
+            displayName: profile.displayName || 'Usuario',
+            email: profile.id, // We don't store email in profiles, using ID as placeholder
+            totalActivities: userCompletions.length,
+            streak,
+            lastActivity: userCompletions.length > 0 
+              ? userCompletions[0].completedAt 
+              : null,
+            createdAt: profile.createdAt,
+          };
+        })
+      );
+
+      // Calculate platform stats
+      const totalUsers = profiles.length;
+      const totalCompletions = allCompletions.length;
+      const activeUsers = userAnalytics.filter((u: any) => u.totalActivities > 0).length;
+      const avgCompletionsPerUser = totalUsers > 0 ? (totalCompletions / totalUsers).toFixed(1) : 0;
+
+      res.json({
+        users: userAnalytics,
+        platformStats: {
+          totalUsers,
+          activeUsers,
+          totalCompletions,
+          avgCompletionsPerUser,
+        },
+      });
+    } catch (error: any) {
+      console.error('Admin analytics error:', error);
       res.status(500).json({ error: error.message });
     }
   });

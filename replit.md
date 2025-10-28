@@ -6,6 +6,35 @@
 
 ## Recent Changes
 
+### ✅ User-Friendly Dashboard & Real Admin Analytics (October 28, 2025)
+**Enhanced for maximum simplicity and added real SQL-based admin reporting:**
+
+- **Dashboard Redesign - Ultra User-Friendly**:
+  - Huge, prominent CTA card "¿Listo para aprender?" with obvious button
+  - Motivational messages based on streak level
+  - Visual progress bar showing completion percentage
+  - Three large stat cards: Racha (streak), Última Actividad, Actividades Completadas
+  - Each card includes encouraging, motivational text
+  - Quick access buttons for courses and settings
+  - All text in simple, clear Spanish
+
+- **Removed Pricing**:
+  - Removed pricing link from navigation
+  - Simplified navigation to focus on learning
+
+- **Admin Analytics (Real SQL Data)**:
+  - Added `/api/admin/analytics` endpoint with authentication & admin protection
+  - Platform-wide stats: total users, active users, completions, average per user
+  - User table showing: name, streak, activities, last activity, registration date
+  - All data pulled from PostgreSQL in real-time
+  - Removed all mock/placeholder data
+
+- **Files Modified**:
+  - `client/src/components/Navbar.tsx` - Removed pricing link
+  - `client/src/pages/Dashboard.tsx` - Complete redesign for user-friendliness
+  - `client/src/pages/Admin.tsx` - Real analytics display
+  - `server/routes.ts` - Added protected admin analytics endpoint
+
 ### ✅ UX Improvements: Activity Ordering, Next Topic Navigation & Password Reset Fix (October 28, 2025)
 **Enhanced user experience with better content flow and reliable authentication:**
 

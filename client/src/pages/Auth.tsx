@@ -36,9 +36,19 @@ export default function Auth() {
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
 
   useEffect(() => {
+    // Check multiple conditions for password reset flow
     const params = new URLSearchParams(searchString);
-    if (params.get('reset') === 'true' && session) {
+    const isResetParam = params.get('reset') === 'true';
+    const hasRecoveryType = window.location.hash.includes('type=recovery');
+    
+    // ONLY show password reset form for actual recovery flows:
+    // Must have type=recovery in hash AND either:
+    // - The reset=true query param, OR
+    // - An active session (recovery session from Supabase)
+    if (hasRecoveryType && (isResetParam || session)) {
       setIsPasswordReset(true);
+    } else {
+      setIsPasswordReset(false);
     }
   }, [searchString, session]);
 

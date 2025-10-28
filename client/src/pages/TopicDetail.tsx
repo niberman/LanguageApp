@@ -94,6 +94,16 @@ export default function TopicDetail() {
     );
   }
 
+  // Sort activities: videos first, then quizlet, then aiChat
+  const sortedActivities = [...topic.activities].sort((a, b) => {
+    const order = { video: 0, quizlet: 1, aiChat: 2 };
+    return (order[a.type as keyof typeof order] || 999) - (order[b.type as keyof typeof order] || 999);
+  });
+
+  // Find next topic for navigation
+  const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
+  const nextTopic = currentTopicIndex < lesson.topics.length - 1 ? lesson.topics[currentTopicIndex + 1] : null;
+
   const handleActivityComplete = (activityId: string) => {
     if (!user) {
       toast({
@@ -142,7 +152,7 @@ export default function TopicDetail() {
           </div>
 
           <div className="space-y-6">
-            {topic.activities.map((activity: any) => {
+            {sortedActivities.map((activity: any) => {
               if (activity.type === "video") {
                 // Extract video ID from various YouTube URL formats
                 let videoId = "";
@@ -248,6 +258,32 @@ export default function TopicDetail() {
               return null;
             })}
           </div>
+
+          {/* Next Topic Navigation */}
+          {nextTopic && (
+            <Card className="mt-8 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold mb-1">¿Listo para continuar?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Siguiente: {nextTopic.title}
+                  </p>
+                </div>
+                <Button
+                  onClick={() =>
+                    setLocation(
+                      `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
+                    )
+                  }
+                  data-testid="button-next-topic"
+                  size="lg"
+                >
+                  Continuar
+                  <ChevronLeft className="ml-2 h-4 w-4 rotate-180" />
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       </main>
 

@@ -94,10 +94,13 @@ export default function TopicDetail() {
     );
   }
 
-  // Sort activities: videos first, then quizlet, then aiChat
+  // Sort activities: videos first, then quizlet, then AI chat
+  // This ensures users see instructional videos before practice exercises
   const sortedActivities = [...topic.activities].sort((a, b) => {
     const order = { video: 0, quizlet: 1, aiChat: 2 };
-    return (order[a.type as keyof typeof order] || 999) - (order[b.type as keyof typeof order] || 999);
+    const orderA = order[a.type as keyof typeof order] ||  999;
+    const orderB = order[b.type as keyof typeof order] || 999;
+    return orderA - orderB;
   });
 
   // Find next topic for navigation

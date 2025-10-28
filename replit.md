@@ -6,6 +6,30 @@
 
 ## Recent Changes
 
+### ✅ UX Improvements: Activity Ordering, Next Topic Navigation & Password Reset Fix (October 28, 2025)
+**Enhanced user experience with better content flow and reliable authentication:**
+
+- **Activity Ordering**:
+  - Activities now automatically sorted by type: Videos first, then Quizlet flashcards, then AI chat
+  - Ensures consistent viewing experience across all topics
+  - Users see instructional videos before practice exercises
+
+- **Next Topic Navigation**:
+  - Added "¿Listo para continuar?" Card at bottom of each topic page
+  - One-click button to advance to next topic in the lesson
+  - Only shows when next topic is available
+  - Improves learning flow by reducing navigation friction
+
+- **Password Reset Reliability**:
+  - Fixed inconsistent password reset flow detection
+  - Now correctly identifies Supabase recovery flows using `type=recovery` hash check
+  - Prevents false positives from signup/magic link confirmations
+  - Users reliably see password update form after clicking email reset link
+
+- **Files Modified**:
+  - `client/src/pages/TopicDetail.tsx` - Activity sorting + next topic CTA
+  - `client/src/pages/Auth.tsx` - Improved password reset detection
+
 ### ✅ Updated Course Content with Real Videos & Flashcards (October 28, 2025)
 **Replaced placeholder content with actual educational materials:**
 

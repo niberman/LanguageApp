@@ -6,6 +6,25 @@
 
 ## Recent Changes
 
+### ✅ Updated Course Content with Real Videos & Flashcards (October 28, 2025)
+**Replaced placeholder content with actual educational materials:**
+
+- **Old Topics Removed**: Cognados, Despedidas, Números, Preguntas Comunes, Presentaciones, Pronunciación
+- **New Topics Added** (7 topics total):
+  1. **About** - Introduction video (video only, no flashcards)
+  2. **What is your name?** - Name introductions (video + Quizlet flashcards)
+  3. **Cómo decir "Soy de…" en inglés** - Where you're from (video + Quizlet flashcards)
+  4. **Do you like to travel?** - Travel preferences (video + Quizlet flashcards)
+  5. **Do you work?** - Job and work conversations (video + Quizlet flashcards)
+  6. **Do you like?** - Likes and dislikes (video + Quizlet flashcards)
+  7. **Greetings** - Common greetings (video + Quizlet flashcards)
+
+- **Content Statistics**:
+  - 7 YouTube video lessons
+  - 6 Quizlet flashcard sets
+  - All Quizlet embeds configured with Spanish locale (`&locale=es`)
+  - All videos use YouTube embed format for consistent playback
+
 ### ✅ Password Reset Flow Implementation (October 28, 2025)
 **Fixed broken password reset email links and added complete password update UI:**
 

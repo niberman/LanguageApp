@@ -202,17 +202,21 @@ Placeholder routes are included for:
 
 For password reset emails to work correctly, configure these in **Supabase Dashboard → Authentication → URL Configuration**:
 
-**Production Site URL:**
+**Development Site URL:**
 ```
-https://workspace.david2792.repl.co
+https://0bd2f1cb-08f6-4eb1-9f8d-35851ac058a7-00-3r4boy4judirr.picard.replit.dev
+```
+
+**Production Site URL (after deploying):**
+```
+https://workspace-david2792.replit.app
 ```
 
 **Redirect URLs (add all):**
 ```
-https://workspace.david2792.repl.co/auth*
-https://workspace.david2792.repl.co/auth?reset=true
+https://0bd2f1cb-08f6-4eb1-9f8d-35851ac058a7-00-3r4boy4judirr.picard.replit.dev/auth*
+https://workspace-david2792.replit.app/auth*
 http://localhost:5000/auth*
-http://localhost:5000/auth?reset=true
 ```
 
 **Why this is needed:**

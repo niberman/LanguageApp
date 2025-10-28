@@ -13,18 +13,30 @@ Password reset emails redirect to `localhost:3000` instead of your actual app UR
 ### Step 2: Configure URLs
 
 #### Site URL
-Set this to your production URL:
+**IMPORTANT:** Use your ACTUAL Replit URL (not the fake one!)
+
+For development (use this first):
 ```
-https://workspace.david2792.repl.co
+https://0bd2f1cb-08f6-4eb1-9f8d-35851ac058a7-00-3r4boy4judirr.picard.replit.dev
+```
+
+After deploying (cleaner URL):
+```
+https://workspace-david2792.replit.app
 ```
 
 #### Redirect URLs
 Add **ALL** of these (click "+ Add URL" for each):
+
+**For development:**
 ```
-https://workspace.david2792.repl.co/auth*
-https://workspace.david2792.repl.co/auth?reset=true
+https://0bd2f1cb-08f6-4eb1-9f8d-35851ac058a7-00-3r4boy4judirr.picard.replit.dev/auth*
 http://localhost:5000/auth*
-http://localhost:5000/auth?reset=true
+```
+
+**After deploying (add these too):**
+```
+https://workspace-david2792.replit.app/auth*
 ```
 
 **Note:** The wildcard `*` allows any query parameters. The specific `?reset=true` URL is required for the password update flow.

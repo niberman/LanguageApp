@@ -136,7 +136,7 @@ async function seedCourses() {
         topicId: topic2.id,
         type: "quizlet",
         data: {
-          embedUrl: "https://quizlet.com/1098715669/match/embed?i=nd4dc&x=1jj1&locale=es",
+          embedUrl: "https://quizlet.com/1098715669/match/embed?i=nd4dc&x=1jj1",
         },
       },
     ]);

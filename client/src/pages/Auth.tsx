@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useState, useEffect } from 'react';
+import { useLocation, useSearch } from 'wouter';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,16 +21,26 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { signIn, signUp, resetPassword, user } = useAuth();
+  const searchString = useSearch();
+  const { signIn, signUp, resetPassword, updatePassword, user, session } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [newPasswordData, setNewPasswordData] = useState({ password: '', confirmPassword: '' });
 
   const [signInData, setSignInData] = useState({ email: '', password: '' });
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get('reset') === 'true' && session) {
+      setIsPasswordReset(true);
+    }
+  }, [searchString, session]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +99,82 @@ export default function Auth() {
       setIsResetLoading(false);
     }
   };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPasswordData.password !== newPasswordData.confirmPassword) {
+      toast({ title: t('common.error'), description: t('auth.passwordsDoNotMatch'), variant: 'destructive' });
+      return;
+    }
+    if (newPasswordData.password.length < 6) {
+      toast({ title: t('common.error'), description: t('auth.passwordMinLength'), variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await updatePassword(newPasswordData.password);
+      toast({ 
+        title: t('auth.passwordUpdated'), 
+        description: t('auth.passwordUpdatedDescription'),
+      });
+      setTimeout(() => setLocation('/dashboard'), 1000);
+    } catch (error: any) {
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
+      setIsLoading(false);
+    }
+  };
+
+  if (isPasswordReset) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4">
+        <Card className="w-full max-w-md p-8">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <GraduationCap className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold">La Escuela de Idiomas</h1>
+          </div>
+
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold mb-2">{t('auth.updatePasswordTitle')}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t('auth.updatePasswordDescription')}
+              </p>
+            </div>
+
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <Label htmlFor="new-password">{t('auth.newPassword')}</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPasswordData.password}
+                  onChange={(e) => setNewPasswordData({ ...newPasswordData, password: e.target.value })}
+                  required
+                  data-testid="input-new-password"
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirm-new-password">{t('auth.confirmNewPassword')}</Label>
+                <Input
+                  id="confirm-new-password"
+                  type="password"
+                  value={newPasswordData.confirmPassword}
+                  onChange={(e) => setNewPasswordData({ ...newPasswordData, confirmPassword: e.target.value })}
+                  required
+                  data-testid="input-confirm-new-password"
+                  className="mt-2"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-update-password">
+                {isLoading ? t('auth.updatingPassword') : t('auth.updatePasswordButton')}
+              </Button>
+            </form>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4">

@@ -6,6 +6,31 @@
 
 ## Recent Changes
 
+### ✅ Password Reset Flow Implementation (October 28, 2025)
+**Fixed broken password reset email links and added complete password update UI:**
+
+- **Problem Fixed**:
+  - Password reset emails redirected to broken `localhost:3000` URLs
+  - No UI to complete password reset after clicking email link
+
+- **Implementation**:
+  - Added `updatePassword` function to AuthContext for secure password updates
+  - Auth page now detects `reset=true` query parameter + active session
+  - Shows dedicated password update form (Spanish-first with i18n support)
+  - Validates password matching and minimum length (6 chars)
+  - Automatically redirects to dashboard after successful update
+
+- **Documentation**:
+  - Added comprehensive Supabase redirect URL configuration guide to README
+  - Instructions for both development and production environments
+  - Explains why proper configuration is critical for password reset flow
+
+- **Files Modified**:
+  - `client/src/contexts/AuthContext.tsx` - Added updatePassword method
+  - `client/src/pages/Auth.tsx` - Password reset detection and UI
+  - `client/src/contexts/LanguageContext.tsx` - New i18n strings
+  - `README.md` - Supabase configuration documentation
+
 ### ✅ Quizlet Spanish UI & Better Card Fitting (October 28, 2025)
 **Improved Quizlet embed experience with Spanish interface and better card sizing:**
 

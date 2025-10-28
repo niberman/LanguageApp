@@ -211,11 +211,24 @@ echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 Verify DATABASE_URL is correct and includes `?pgbouncer=true` for connection pooling.
 
-### Auth not working
+### Auth not working / Password Reset Links Broken
 
-1. Check Supabase dashboard → Authentication → URL Configuration
-2. Add your Replit URL to "Allowed Redirect URLs"
-3. Verify Google OAuth is configured if using Google sign-in
+**Configure Supabase Redirect URLs** (Required for password reset and OAuth):
+
+1. Go to Supabase dashboard → **Authentication** → **URL Configuration**
+2. Update **Site URL** to your deployment URL:
+   - Development: `http://localhost:5000`
+   - Production: `https://your-repl-name.replit.app` (or your custom domain)
+3. Add to **Redirect URLs** (add ALL of these):
+   ```
+   http://localhost:5000/auth*
+   https://your-repl-name.replit.app/auth*
+   ```
+   Replace `your-repl-name` with your actual Replit username and repl name.
+
+4. Verify Google OAuth is configured if using Google sign-in
+
+**Why this matters**: When users click password reset links in their email, Supabase redirects them to the URL you configure. If this is set to `localhost:3000`, deployed users will see a broken page.
 
 ## 📄 License
 

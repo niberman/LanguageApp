@@ -16,6 +16,10 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
     window.open(externalUrl || embedUrl, '_blank');
   };
 
+  // Use different aspect ratios for different embed types
+  const aspectClass = type === 'quizlet' ? 'aspect-[4/3]' : 'aspect-video';
+  const heightClass = type === 'quizlet' ? 'min-h-[600px]' : '';
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4 border-b flex items-center justify-between">
@@ -30,7 +34,7 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
           Abrir en pestaña nueva
         </Button>
       </div>
-      <div className="aspect-video bg-muted">
+      <div className={`${aspectClass} ${heightClass} bg-muted`}>
         <iframe
           src={embedUrl}
           className="w-full h-full border-0"

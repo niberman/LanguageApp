@@ -118,7 +118,7 @@ async function seedCourses() {
         type: "quizlet",
         data: {
           embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);
@@ -137,7 +137,7 @@ async function seedCourses() {
         type: "quizlet",
         data: {
           embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);
@@ -156,7 +156,7 @@ async function seedCourses() {
         type: "quizlet",
         data: {
           embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);
@@ -175,7 +175,7 @@ async function seedCourses() {
         type: "quizlet",
         data: {
           embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);
@@ -194,7 +194,7 @@ async function seedCourses() {
         type: "quizlet",
         data: {
           embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);
@@ -213,7 +213,7 @@ async function seedCourses() {
         type: "quizlet",
         data: {
           embedUrl:
-            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1",
+            "https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es",
         },
       },
     ]);

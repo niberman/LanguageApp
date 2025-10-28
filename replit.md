@@ -4,6 +4,40 @@
 
 "La Escuela de Idiomas" is a production-ready, Spanish-only language learning platform designed to facilitate language acquisition through structured content and interactive activities. Its core purpose is to provide an engaging and effective learning experience, leveraging embedded external resources and a clear, hierarchical content model. The platform supports a freemium model with a focus on user progress tracking and a streamlined, intuitive user interface. The project aims to become a leading platform for Spanish speakers to learn new languages, starting with English.
 
+## Recent Changes
+
+### ✅ Quizlet Spanish UI & Better Card Fitting (October 28, 2025)
+**Improved Quizlet embed experience with Spanish interface and better card sizing:**
+
+- **Spanish Locale**:
+  - Added `&locale=es` parameter to all Quizlet embed URLs
+  - Quizlet UI now displays in Spanish (buttons, labels, navigation)
+  - Updated all 6 Quizlet activities in seed data
+
+- **Better Card Fitting**:
+  - Changed aspect ratio from 16:9 (video) to 4:3 for Quizlet embeds
+  - Added minimum height of 600px for Quizlet frames
+  - Cards now fit better within the iframe without excessive scrolling
+  - Updated EmbedFrame component to handle different aspect ratios per type
+
+- **Updated URLs**:
+  - Format: `https://quizlet.com/{id}/flashcards/embed?i=nd4dc&x=1jj1&locale=es`
+  - All existing activities updated via database re-seed
+
+### ✅ Database Setup & Production Fixes (October 28, 2025)
+**Fixed production database connectivity and added seeding capability:**
+
+- **Database Migration**:
+  - Created Replit PostgreSQL database (replaced external Neon DB)
+  - Fixed "getaddrinfo EAI_AGAIN helium" error on deployed site
+  - Applied schema using `npm run db:push`
+  - Successfully seeded with 1 course, 6 topics, 12 activities
+
+- **Production Seeding**:
+  - Access `/admin` → "Base de Datos" tab to seed production database
+  - One-click button: "🌱 Sembrar Base de Datos"
+  - Prevents duplicate courses automatically
+
 ## User Preferences
 
 - **Design System**: Material Design-inspired with warm, encouraging aesthetics

@@ -127,8 +127,8 @@ export default function TopicDetail() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-1 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <main className="flex-1 py-6 sm:py-12">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6">
           <div className="mb-8">
             <Button
               variant="ghost"

@@ -6,6 +6,26 @@
 
 ## Recent Changes
 
+### ✅ Activity Ordering & Mobile Responsiveness (October 28, 2025)
+**Fixed activity ordering and improved mobile experience:**
+
+- **Activity Ordering Fix**:
+  - Videos now correctly appear before Quizlet flashcards
+  - Fixed backend query to order activities by type (video → quizlet → aiChat)
+  - Ensures consistent learning flow: watch video first, then practice with flashcards
+
+- **Mobile Responsiveness (iPhone SE optimized)**:
+  - Quizlet embeds now responsive: 500px on mobile, 600px on tablet, 700px on desktop
+  - YouTube embeds use responsive aspect-video ratio
+  - Reduced padding on mobile for better screen usage
+  - Button text hides on mobile (icon only) to save space
+  - All embeds centered and fully usable on small screens
+
+- **Files Modified**:
+  - `server/storage.ts` - Added SQL ORDER BY for activity type
+  - `client/src/components/EmbedFrame.tsx` - Mobile-responsive heights and padding
+  - `client/src/pages/TopicDetail.tsx` - Responsive page padding
+
 ### ✅ Password Reset Persistence Fix (October 28, 2025)
 **Fixed password reset page redirecting to login:**
 

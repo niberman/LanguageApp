@@ -16,25 +16,29 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
     window.open(externalUrl || embedUrl, '_blank');
   };
 
-  // Use different aspect ratios for different embed types
-  const aspectClass = type === 'quizlet' ? 'aspect-[4/3]' : 'aspect-video';
-  const heightClass = type === 'quizlet' ? 'min-h-[600px]' : '';
+  // Mobile-responsive heights and aspect ratios
+  // For YouTube: Standard 16:9 aspect ratio
+  // For Quizlet: Taller aspect to show flashcards properly, responsive on mobile
+  const containerClass = type === 'quizlet' 
+    ? 'w-full h-[500px] sm:h-[600px] md:h-[700px]' 
+    : 'aspect-video w-full';
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4 border-b flex items-center justify-between">
-        <h3 className="font-semibold">{title}</h3>
+    <Card className="overflow-hidden w-full">
+      <div className="p-3 sm:p-4 border-b flex items-center justify-between gap-2">
+        <h3 className="font-semibold text-sm sm:text-base">{title}</h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleClick}
           data-testid={`button-open-${type}`}
+          className="shrink-0"
         >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Abrir en pestaña nueva
+          <ExternalLink className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Abrir en pestaña nueva</span>
         </Button>
       </div>
-      <div className={`${aspectClass} ${heightClass} bg-muted`}>
+      <div className={`${containerClass} bg-muted`}>
         <iframe
           src={embedUrl}
           className="w-full h-full border-0"

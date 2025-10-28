@@ -110,11 +110,19 @@ export class DbStorage implements IStorage {
       for (const topic of topicResults) {
         const topicModel = new TopicModel(topic.id, topic.title, topic.summary);
 
-        // Get activities for this topic
+        // Get activities for this topic, ordered by type (videos first, then quizlet, then aiChat)
         const activityResults = await db
           .select()
           .from(schema.activities)
-          .where(eq(schema.activities.topicId, topic.id));
+          .where(eq(schema.activities.topicId, topic.id))
+          .orderBy(
+            sql`CASE 
+              WHEN ${schema.activities.type} = 'video' THEN 1
+              WHEN ${schema.activities.type} = 'quizlet' THEN 2
+              WHEN ${schema.activities.type} = 'aiChat' THEN 3
+              ELSE 4
+            END`
+          );
 
         for (const activity of activityResults) {
           let activityModel;

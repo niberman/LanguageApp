@@ -1,5 +1,5 @@
 # The Language School - "Let's Start Talking!"
-
+Test comment add
 A production-ready bilingual (EN/ES) language learning platform with progress tracking, embedded content, and Supabase authentication.
 
 ## 🚀 Features

@@ -38,23 +38,65 @@ export default function Auth() {
   // Check for password recovery on mount and when hash/session changes
   useEffect(() => {
     const checkPasswordRecovery = () => {
-      // Check if this is a password recovery flow
-      // Supabase recovery links have #access_token=...&type=recovery in the URL
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const hasRecoveryType = hashParams.get('type') === 'recovery';
-      
-      // Also check if we previously detected a recovery flow (persisted in localStorage)
-      const wasRecoveryFlow = localStorage.getItem('password_reset_flow') === 'true';
-      
-      // If we detect recovery type in hash, save it to localStorage
-      // This persists even after Supabase processes the token and clears the hash
-      if (hasRecoveryType) {
-        localStorage.setItem('password_reset_flow', 'true');
-        setIsPasswordReset(true);
-      } 
-      // Or if we have a session and previously detected recovery flow
-      else if (wasRecoveryFlow && session) {
-        setIsPasswordReset(true);
+      try {
+        console.log('[Password Reset] Checking for recovery flow...');
+        
+        // Check if this is a password recovery flow
+        // Supabase recovery links have #access_token=...&type=recovery in the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hasRecoveryType = hashParams.get('type') === 'recovery';
+        const hasAccessToken = !!hashParams.get('access_token');
+        
+        // Also check if we previously detected a recovery flow (persisted in localStorage)
+        // This was set by the inline script in index.html or by a previous detection
+        const wasRecoveryFlow = localStorage.getItem('password_reset_flow') === 'true';
+        const detectedAt = localStorage.getItem('password_reset_detected_at');
+        
+        console.log('[Password Reset] Detection state:', {
+          hasRecoveryType,
+          hasAccessToken,
+          wasRecoveryFlow,
+          detectedAt,
+          hasSession: !!session,
+          currentHash: window.location.hash.substring(0, 50) + '...'
+        });
+        
+        // If we detect recovery type in hash, save it to localStorage
+        // This persists even after Supabase processes the token and clears the hash
+        if (hasRecoveryType && hasAccessToken) {
+          console.log('[Password Reset] ✓ Recovery flow detected in hash - showing password update form');
+          localStorage.setItem('password_reset_flow', 'true');
+          localStorage.setItem('password_reset_detected_at', Date.now().toString());
+          setIsPasswordReset(true);
+          return;
+        } 
+        
+        // If we have the localStorage flag (set by inline script or previous detection)
+        if (wasRecoveryFlow) {
+          // Only honor the flag if:
+          // 1. We have a session (Supabase has processed the recovery token)
+          // OR
+          // 2. The detection was recent (within last 10 seconds - prevents stale flags)
+          const isRecent = detectedAt && (Date.now() - parseInt(detectedAt)) < 10000;
+          
+          if (session) {
+            console.log('[Password Reset] ✓ Have session + recovery flag - showing password update form');
+            setIsPasswordReset(true);
+            return;
+          } else if (isRecent) {
+            console.log('[Password Reset] ✓ Recent recovery flag detected - showing password update form');
+            setIsPasswordReset(true);
+            return;
+          } else {
+            console.log('[Password Reset] ⚠ Stale recovery flag detected - clearing it');
+            localStorage.removeItem('password_reset_flow');
+            localStorage.removeItem('password_reset_detected_at');
+          }
+        }
+        
+        console.log('[Password Reset] No recovery flow detected');
+      } catch (error) {
+        console.error('[Password Reset] Error in detection:', error);
       }
     };
     
@@ -139,15 +181,20 @@ export default function Auth() {
     }
     setIsLoading(true);
     try {
+      console.log('[Password Reset] Updating password...');
       await updatePassword(newPasswordData.password);
-      // Clear the password reset flow flag from localStorage
+      // Clear the password reset flow flags from localStorage
+      console.log('[Password Reset] ✓ Password updated successfully - clearing flags');
       localStorage.removeItem('password_reset_flow');
+      localStorage.removeItem('password_reset_detected_at');
+      localStorage.removeItem('password_reset_hash');
       toast({ 
         title: t('auth.passwordUpdated'), 
         description: t('auth.passwordUpdatedDescription'),
       });
       setTimeout(() => setLocation('/dashboard'), 1000);
     } catch (error: any) {
+      console.error('[Password Reset] ✗ Error updating password:', error);
       toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
       setIsLoading(false);
     }

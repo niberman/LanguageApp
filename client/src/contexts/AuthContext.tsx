@@ -140,8 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Always clear local state
       setSession(null);
       setUser(null);
-      // Clear password reset flow flag if user abandons password reset
+      // Clear password reset flow flags if user abandons password reset
       localStorage.removeItem('password_reset_flow');
+      localStorage.removeItem('password_reset_detected_at');
+      localStorage.removeItem('password_reset_hash');
     }
   };
 

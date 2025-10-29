@@ -18,20 +18,49 @@ import Settings from "@/pages/Settings";
 import Pricing from "@/pages/Pricing";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/not-found";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
-      <Route path="/courses" component={Courses} />
-      <Route path="/courses/:id" component={CourseDetail} />
-      <Route path="/courses/:courseId/lessons/:lessonId" component={LessonDetail} />
-      <Route path="/courses/:courseId/lessons/:lessonId/topics/:topicId" component={TopicDetail} />
-      <Route path="/topic/:topicId" component={TopicRedirect} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/courses">
+        <ProtectedRoute>
+          <Courses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/courses/:id">
+        <ProtectedRoute>
+          <CourseDetail />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/courses/:courseId/lessons/:lessonId">
+        <ProtectedRoute>
+          <LessonDetail />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/courses/:courseId/lessons/:lessonId/topics/:topicId">
+        <ProtectedRoute>
+          <TopicDetail />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/topic/:topicId">
+        <ProtectedRoute>
+          <TopicRedirect />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      </Route>
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

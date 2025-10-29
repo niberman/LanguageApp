@@ -6,6 +6,24 @@
 
 ## Recent Changes
 
+### ✅ Password Reset Flow - Complete Fix (October 29, 2025)
+**Completely overhauled password reset to work reliably on initial page load:**
+
+- **Problem**: Recovery links from email didn't show password update form - page remained on login view
+- **Root Cause**: Password reset detection only ran when `session` changed, not on initial mount with hash fragment
+- **Solution Implemented**:
+  - Detection now runs immediately on component mount via `checkPasswordRecovery()` function
+  - Added `hashchange` event listener to catch recovery URLs
+  - localStorage `password_reset_flow=true` persists state across Supabase hash clearing
+  - Flag cleared on sign-out to prevent stale state
+  - Graceful error handling for `refresh_token_not_found` during recovery
+  
+- **Testing**: End-to-end test passed - navigating to `/auth#...&type=recovery` immediately shows password update form
+- **Files Modified**:
+  - `client/src/pages/Auth.tsx` - Immediate detection on mount + hashchange listener
+  - `client/src/contexts/AuthContext.tsx` - Clear localStorage flag on sign-out
+  - `README.md` - Updated Supabase redirect URL documentation
+
 ### ✅ Activity Ordering & Mobile Responsiveness (October 28, 2025)
 **Fixed activity ordering and improved mobile experience:**
 

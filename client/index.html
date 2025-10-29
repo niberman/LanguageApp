@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <meta name="description" content="Practica cada día. Conecta con personas. Desbloquea oportunidades. Aprende inglés con La Escuela de Idiomas." />
     <title>La Escuela de Idiomas - ¡Empecemos a hablar!</title>
+    
+    <!-- Capture password reset hash IMMEDIATELY before Supabase clears it -->
+    <script>
+      (function() {
+        // Run synchronously before anything else
+        if (window.location.hash) {
+          try {
+            // Parse hash fragment (remove leading #)
+            var hashParams = new URLSearchParams(window.location.hash.substring(1));
+            var recoveryType = hashParams.get('type');
+            var accessToken = hashParams.get('access_token');
+            
+            // If this is a password recovery flow, save it IMMEDIATELY
+            if (recoveryType === 'recovery' && accessToken) {
+              console.log('[Password Reset] Recovery flow detected - saving to localStorage');
+              localStorage.setItem('password_reset_flow', 'true');
+              localStorage.setItem('password_reset_detected_at', Date.now().toString());
+              
+              // Also save the full hash for debugging
+              localStorage.setItem('password_reset_hash', window.location.hash);
+            }
+          } catch (e) {
+            console.error('[Password Reset] Error capturing hash:', e);
+          }
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

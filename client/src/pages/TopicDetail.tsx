@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import EmbedFrame from "@/components/EmbedFrame";
 import ActivitySteps from "@/components/ActivitySteps";
 import { queryClient } from "@/lib/queryClient";
@@ -129,6 +130,12 @@ export default function TopicDetail() {
   // Find the first incomplete step (current step)
   const currentStepIndex = steps.findIndex((step: any) => !step.isCompleted);
   const activeStepIndex = currentStepIndex === -1 ? steps.length - 1 : currentStepIndex;
+
+  // Calculate completion percentage
+  const completedCount = steps.filter((step: any) => step.isCompleted).length;
+  const totalCount = steps.length;
+  const completionPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const isTopicComplete = completedCount === totalCount && totalCount > 0;
 
   // Find next topic for navigation
   const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
@@ -295,31 +302,71 @@ export default function TopicDetail() {
             })}
           </div>
 
-          {/* Next Topic Navigation */}
-          {nextTopic && (
-            <Card className="mt-8 p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold mb-1">¿Listo para continuar?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Siguiente: {nextTopic.title}
+          {/* Progress and Navigation */}
+          <Card className="mt-8">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-4 mb-2">
+                <CardTitle className="text-lg">Progreso del tema</CardTitle>
+                <span className="text-sm font-medium" data-testid="text-progress-percentage">
+                  {completedCount} de {totalCount} completadas
+                </span>
+              </div>
+              <Progress value={completionPercentage} className="h-2" data-testid="progress-bar" />
+            </CardHeader>
+            {isTopicComplete && nextTopic && (
+              <CardContent>
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-primary mb-2">¡Excelente trabajo!</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Has completado todas las actividades de este tema. ¡Continúa con el siguiente!
                   </p>
                 </div>
-                <Button
-                  onClick={() =>
-                    setLocation(
-                      `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
-                    )
-                  }
-                  data-testid="button-next-topic"
-                  size="lg"
-                >
-                  Continuar
-                  <ChevronLeft className="ml-2 h-4 w-4 rotate-180" />
-                </Button>
-              </div>
-            </Card>
-          )}
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-1">Siguiente tema</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {nextTopic.title}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      setLocation(
+                        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
+                      )
+                    }
+                    data-testid="button-next-topic"
+                    size="lg"
+                  >
+                    Continuar
+                    <ChevronLeft className="ml-2 h-4 w-4 rotate-180" />
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+            {isTopicComplete && !nextTopic && (
+              <CardContent>
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                  <h3 className="font-semibold text-primary mb-2">¡Felicitaciones!</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Has completado todas las actividades de este tema y lección.
+                  </p>
+                  <Button
+                    onClick={() => setLocation('/dashboard')}
+                    data-testid="button-back-to-dashboard"
+                  >
+                    Volver al panel
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+            {!isTopicComplete && (
+              <CardContent>
+                <p className="text-sm text-muted-foreground text-center">
+                  Completa todas las actividades para continuar con el siguiente tema
+                </p>
+              </CardContent>
+            )}
+          </Card>
         </div>
       </main>
 

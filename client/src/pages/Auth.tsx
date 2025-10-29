@@ -36,31 +36,25 @@ export default function Auth() {
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
 
   useEffect(() => {
-    // Debug logging
-    console.log('Auth page - checking password reset flow');
-    console.log('URL:', window.location.href);
-    console.log('Hash:', window.location.hash);
-    console.log('Search:', searchString);
-    console.log('Session:', session);
+    // Check if this is a password recovery flow
+    // Supabase recovery links have #access_token=...&type=recovery in the URL
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const hasRecoveryType = hashParams.get('type') === 'recovery';
     
-    // Check multiple conditions for password reset flow
-    const params = new URLSearchParams(searchString);
-    const isResetParam = params.get('reset') === 'true';
-    const hasRecoveryType = window.location.hash.includes('type=recovery');
+    // Also check if we previously detected a recovery flow (persisted in localStorage)
+    const wasRecoveryFlow = localStorage.getItem('password_reset_flow') === 'true';
     
-    console.log('isResetParam:', isResetParam);
-    console.log('hasRecoveryType:', hasRecoveryType);
-    
-    // ONLY show password reset form for actual recovery flows:
-    // Must have type=recovery in hash AND reset=true query param
-    // OR if we already have a session with reset=true (recovery session persists)
-    if (hasRecoveryType || (isResetParam && session)) {
-      console.log('✅ Password reset mode activated');
+    // If we detect recovery type in hash, save it to localStorage
+    // This persists even after Supabase processes the token and clears the hash
+    if (hasRecoveryType) {
+      localStorage.setItem('password_reset_flow', 'true');
+      setIsPasswordReset(true);
+    } 
+    // Or if we have a session and previously detected recovery flow
+    else if (wasRecoveryFlow && session) {
       setIsPasswordReset(true);
     }
-    // IMPORTANT: Don't set to false here - once we detect recovery, stay in password reset mode
-    // The form will handle navigation after successful password update
-  }, [searchString, session]);
+  }, [session]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +127,8 @@ export default function Auth() {
     setIsLoading(true);
     try {
       await updatePassword(newPasswordData.password);
+      // Clear the password reset flow flag from localStorage
+      localStorage.removeItem('password_reset_flow');
       toast({ 
         title: t('auth.passwordUpdated'), 
         description: t('auth.passwordUpdatedDescription'),

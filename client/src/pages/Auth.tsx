@@ -35,25 +35,38 @@ export default function Auth() {
   const [signInData, setSignInData] = useState({ email: '', password: '' });
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
 
+  // Check for password recovery on mount and when hash/session changes
   useEffect(() => {
-    // Check if this is a password recovery flow
-    // Supabase recovery links have #access_token=...&type=recovery in the URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const hasRecoveryType = hashParams.get('type') === 'recovery';
+    const checkPasswordRecovery = () => {
+      // Check if this is a password recovery flow
+      // Supabase recovery links have #access_token=...&type=recovery in the URL
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const hasRecoveryType = hashParams.get('type') === 'recovery';
+      
+      // Also check if we previously detected a recovery flow (persisted in localStorage)
+      const wasRecoveryFlow = localStorage.getItem('password_reset_flow') === 'true';
+      
+      // If we detect recovery type in hash, save it to localStorage
+      // This persists even after Supabase processes the token and clears the hash
+      if (hasRecoveryType) {
+        localStorage.setItem('password_reset_flow', 'true');
+        setIsPasswordReset(true);
+      } 
+      // Or if we have a session and previously detected recovery flow
+      else if (wasRecoveryFlow && session) {
+        setIsPasswordReset(true);
+      }
+    };
     
-    // Also check if we previously detected a recovery flow (persisted in localStorage)
-    const wasRecoveryFlow = localStorage.getItem('password_reset_flow') === 'true';
+    // Run immediately
+    checkPasswordRecovery();
     
-    // If we detect recovery type in hash, save it to localStorage
-    // This persists even after Supabase processes the token and clears the hash
-    if (hasRecoveryType) {
-      localStorage.setItem('password_reset_flow', 'true');
-      setIsPasswordReset(true);
-    } 
-    // Or if we have a session and previously detected recovery flow
-    else if (wasRecoveryFlow && session) {
-      setIsPasswordReset(true);
-    }
+    // Also listen for hash changes (in case user navigates with recovery link)
+    window.addEventListener('hashchange', checkPasswordRecovery);
+    
+    return () => {
+      window.removeEventListener('hashchange', checkPasswordRecovery);
+    };
   }, [session]);
 
   const handleSignIn = async (e: React.FormEvent) => {

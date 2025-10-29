@@ -12,6 +12,7 @@ import Courses from "@/pages/Courses";
 import CourseDetail from "@/pages/CourseDetail";
 import LessonDetail from "@/pages/LessonDetail";
 import TopicDetail from "@/pages/TopicDetail";
+import TopicRedirect from "@/pages/TopicRedirect";
 import Dashboard from "@/pages/Dashboard";
 import Settings from "@/pages/Settings";
 import Pricing from "@/pages/Pricing";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/courses/:id" component={CourseDetail} />
       <Route path="/courses/:courseId/lessons/:lessonId" component={LessonDetail} />
       <Route path="/courses/:courseId/lessons/:lessonId/topics/:topicId" component={TopicDetail} />
+      <Route path="/topic/:topicId" component={TopicRedirect} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />

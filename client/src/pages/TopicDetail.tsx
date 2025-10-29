@@ -34,6 +34,20 @@ export default function TopicDetail() {
     },
   });
 
+  const { data: completions = [] } = useQuery({
+    queryKey: ["/api/completions"],
+    queryFn: async () => {
+      const token = await getAuthToken();
+      const res = await fetch("/api/completions", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
   const completeActivity = useMutation({
     mutationFn: async (activityId: string) => {
       const res = await fetch(`/api/activities/${activityId}/complete`, {
@@ -97,6 +111,11 @@ export default function TopicDetail() {
   // Activities are already sorted by backend (video → quizlet → aiChat)
   // No need to sort again on frontend
   const sortedActivities = topic.activities;
+
+  // Create a Set of completed activity IDs for quick lookup
+  const completedActivityIds = new Set(
+    completions.map((c: any) => c.activityId)
+  );
 
   // Find next topic for navigation
   const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
@@ -186,7 +205,9 @@ export default function TopicDetail() {
                     embedUrl={embedUrl}
                     externalUrl={watchUrl}
                     title="Ver lección en video"
-                    onInteraction={() => handleActivityComplete(activity.id)}
+                    onInteraction={() => {}}
+                    isCompleted={completedActivityIds.has(activity.id)}
+                    onComplete={() => handleActivityComplete(activity.id)}
                   />
                 );
               }
@@ -199,7 +220,9 @@ export default function TopicDetail() {
                     embedUrl={activity.embedUrl}
                     externalUrl={activity.embedUrl.replace('/embed', '').split('?')[0]}
                     title="Practicar con Quizlet"
-                    onInteraction={() => handleActivityComplete(activity.id)}
+                    onInteraction={() => {}}
+                    isCompleted={completedActivityIds.has(activity.id)}
+                    onComplete={() => handleActivityComplete(activity.id)}
                   />
                 );
               }

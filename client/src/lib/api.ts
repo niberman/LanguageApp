@@ -61,6 +61,7 @@ export const progressApi = {
 // Dashboard APIs
 export const dashboardApi = {
   getStats: () => apiRequest('/api/dashboard/stats'),
+  getNextTopic: () => apiRequest('/api/dashboard/next-topic'),
 };
 
 // Profile APIs

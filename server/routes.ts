@@ -254,6 +254,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's next topic (continue learning)
+  app.get("/api/dashboard/next-topic", authenticateUser, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get user's profile to check saved currentTopicId
+      const profile = await storage.getProfile(userId);
+      
+      // Get all user's completions
+      const completions = await storage.getUserCompletions(userId);
+      const completedActivityIds = new Set(completions.map(c => c.activityId));
+      
+      // Get all courses
+      const courses = await storage.getAllCourses();
+      
+      // If user has a saved currentTopicId, validate it and return it
+      if (profile?.currentTopicId) {
+        // Find the topic in all courses
+        for (const courseData of courses) {
+          const course = await storage.getCourseWithContent(courseData.id);
+          if (course) {
+            for (const lesson of course.lessons) {
+              const topic = lesson.topics.find(t => t.id === profile.currentTopicId);
+              if (topic) {
+                return res.json({
+                  topicId: topic.id,
+                  topicTitle: topic.title,
+                  lessonId: lesson.id,
+                  lessonTitle: lesson.title,
+                  courseId: course.id,
+                  courseTitle: course.title,
+                });
+              }
+            }
+          }
+        }
+      }
+      
+      // No saved topic or invalid - find first incomplete topic
+      for (const courseData of courses) {
+        const course = await storage.getCourseWithContent(courseData.id);
+        if (!course) continue;
+        
+        for (const lesson of course.lessons) {
+          for (const topic of lesson.topics) {
+            // Check if topic has incomplete activities
+            const hasIncompleteActivity = topic.activities.some(
+              activity => !completedActivityIds.has(activity.id)
+            );
+            
+            if (hasIncompleteActivity || topic.activities.length === 0) {
+              // Found first incomplete topic - save it and return it
+              await storage.updateProfile(userId, { currentTopicId: topic.id });
+              
+              return res.json({
+                topicId: topic.id,
+                topicTitle: topic.title,
+                lessonId: lesson.id,
+                lessonTitle: lesson.title,
+                courseId: course.id,
+                courseTitle: course.title,
+              });
+            }
+          }
+        }
+      }
+      
+      // All topics complete - return first topic
+      if (courses.length > 0) {
+        const course = await storage.getCourseWithContent(courses[0].id);
+        if (course && course.lessons.length > 0 && course.lessons[0].topics.length > 0) {
+          const lesson = course.lessons[0];
+          const topic = lesson.topics[0];
+          
+          return res.json({
+            topicId: topic.id,
+            topicTitle: topic.title,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            courseId: course.id,
+            courseTitle: course.title,
+          });
+        }
+      }
+      
+      // No topics found at all
+      res.status(404).json({ error: 'No topics found' });
+    } catch (error: any) {
+      console.error('Next topic error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Admin analytics endpoint - Get all user data (PROTECTED)
   app.get("/api/admin/analytics", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
     try {

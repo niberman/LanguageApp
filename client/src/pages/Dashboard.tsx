@@ -30,6 +30,21 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: nextTopic, isLoading: isLoadingNextTopic } = useQuery({
+    queryKey: ['/api/dashboard/next-topic'],
+    queryFn: () => dashboardApi.getNextTopic(),
+    enabled: !!user,
+  });
+
+  const handleContinueLearning = () => {
+    if (nextTopic?.topicId) {
+      setLocation(`/topic/${nextTopic.topicId}`);
+    } else {
+      // Fallback to courses page if no topic found
+      setLocation('/courses');
+    }
+  };
+
   // Show loading state while checking authentication
   if (loading) {
     return (
@@ -106,12 +121,13 @@ export default function Dashboard() {
                 <CardContent className="text-center pb-8">
                   <Button
                     size="lg"
-                    onClick={() => setLocation('/courses')}
+                    onClick={handleContinueLearning}
                     data-testid="button-continue-level"
                     className="text-xl py-6 px-12 h-auto"
+                    disabled={isLoadingNextTopic}
                   >
                     <Play className="mr-3 h-6 w-6" />
-                    {stats?.completedActivities === 0 ? "Empezar Ahora" : "Continuar Aprendiendo"}
+                    {isLoadingNextTopic ? "Cargando..." : (stats?.completedActivities === 0 ? "Empezar Ahora" : "Continuar Aprendiendo")}
                   </Button>
                 </CardContent>
               </Card>

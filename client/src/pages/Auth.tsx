@@ -76,8 +76,8 @@ export default function Auth() {
           // Only honor the flag if:
           // 1. We have a session (Supabase has processed the recovery token)
           // OR
-          // 2. The detection was recent (within last 10 seconds - prevents stale flags)
-          const isRecent = detectedAt && (Date.now() - parseInt(detectedAt)) < 10000;
+          // 2. The detection was recent (within last 30 seconds - prevents stale flags)
+          const isRecent = detectedAt && (Date.now() - parseInt(detectedAt)) < 30000;
           
           if (session) {
             console.log('[Password Reset] ✓ Have session + recovery flag - showing password update form');
@@ -88,9 +88,10 @@ export default function Auth() {
             setIsPasswordReset(true);
             return;
           } else {
-            console.log('[Password Reset] ⚠ Stale recovery flag detected - clearing it');
+            console.log('[Password Reset] ⚠ Stale recovery flag detected - clearing all flags');
             localStorage.removeItem('password_reset_flow');
             localStorage.removeItem('password_reset_detected_at');
+            localStorage.removeItem('password_reset_hash');
           }
         }
         
@@ -145,7 +146,9 @@ export default function Auth() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[Password Reset] Reset password requested');
     if (!resetEmail) {
+      console.log('[Password Reset] ✗ No email provided');
       toast({ 
         title: t('common.error'), 
         description: t('auth.email'), 
@@ -155,7 +158,9 @@ export default function Auth() {
     }
     setIsResetLoading(true);
     try {
+      console.log('[Password Reset] Sending reset email');
       await resetPassword(resetEmail);
+      console.log('[Password Reset] ✓ Reset email sent successfully');
       toast({ 
         title: t('auth.resetEmailSent'), 
         description: t('auth.resetEmailSentDescription'),
@@ -163,6 +168,7 @@ export default function Auth() {
       setShowForgotPassword(false);
       setResetEmail('');
     } catch (error: any) {
+      console.error('[Password Reset] ✗ Error sending reset email');
       toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
     } finally {
       setIsResetLoading(false);

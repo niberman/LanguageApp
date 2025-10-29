@@ -6,23 +6,38 @@
 
 ## Recent Changes
 
-### ✅ Password Reset Flow - Complete Fix (October 29, 2025)
-**Completely overhauled password reset to work reliably on initial page load:**
+### ✅ Password Reset Race Condition - Complete Fix (October 29, 2025)
+**Completely fixed device-inconsistent password reset behavior:**
 
-- **Problem**: Recovery links from email didn't show password update form - page remained on login view
-- **Root Cause**: Password reset detection only ran when `session` changed, not on initial mount with hash fragment
+- **Problem**: Password reset links showed different behavior across devices
+  - Fast devices/connections: Showed login page instead of password update form
+  - Slow devices/connections: Worked correctly
+  - Caused "works on my device" inconsistency
+
+- **Root Cause**: Race condition between Supabase clearing the URL hash and React reading it
+  - On fast connections, Supabase cleared `#access_token=...&type=recovery` before React could detect it
+  - On slow connections, React detected it first
+
 - **Solution Implemented**:
-  - Detection now runs immediately on component mount via `checkPasswordRecovery()` function
-  - Added `hashchange` event listener to catch recovery URLs
-  - localStorage `password_reset_flow=true` persists state across Supabase hash clearing
-  - Flag cleared on sign-out to prevent stale state
-  - Graceful error handling for `refresh_token_not_found` during recovery
+  - **Inline Script** (`client/index.html`): Captures hash BEFORE React/Supabase initialize
+  - **localStorage Persistence**: Flags survive hash clearing (`password_reset_flow`, `password_reset_detected_at`)
+  - **Freshness Window**: 30-second window prevents stale flags from triggering reset UI
+  - **Security**: All flags (including `password_reset_hash` token) cleared on:
+    - Successful password update
+    - User sign-out
+    - Stale flag detection (>30 seconds)
+  - **Privacy**: Removed email logging to prevent PII exposure in console
   
-- **Testing**: End-to-end test passed - navigating to `/auth#...&type=recovery` immediately shows password update form
+- **Testing**: End-to-end tests passed
+  - Form appears immediately on all devices
+  - Persists correctly after page reload
+  - Stale flags cleaned up properly
+  - Works consistently across fast and slow connections
+
 - **Files Modified**:
-  - `client/src/pages/Auth.tsx` - Immediate detection on mount + hashchange listener
-  - `client/src/contexts/AuthContext.tsx` - Clear localStorage flag on sign-out
-  - `README.md` - Updated Supabase redirect URL documentation
+  - `client/index.html` - Inline script for immediate hash capture
+  - `client/src/pages/Auth.tsx` - Improved detection + freshness check + security cleanup
+  - `client/src/contexts/AuthContext.tsx` - Clear all recovery flags on sign-out
 
 ### ✅ Activity Ordering & Mobile Responsiveness (October 28, 2025)
 **Fixed activity ordering and improved mobile experience:**

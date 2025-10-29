@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import EmbedFrame from "@/components/EmbedFrame";
+import ActivitySteps from "@/components/ActivitySteps";
 import { queryClient } from "@/lib/queryClient";
 
 export default function TopicDetail() {
@@ -117,6 +118,18 @@ export default function TopicDetail() {
     completions.map((c: any) => c.activityId)
   );
 
+  // Create steps for the ActivitySteps component
+  const steps = sortedActivities.map((activity: any) => ({
+    id: activity.id,
+    label: activity.title || '',
+    type: activity.type,
+    isCompleted: completedActivityIds.has(activity.id),
+  }));
+
+  // Find the first incomplete step (current step)
+  const currentStepIndex = steps.findIndex((step: any) => !step.isCompleted);
+  const activeStepIndex = currentStepIndex === -1 ? steps.length - 1 : currentStepIndex;
+
   // Find next topic for navigation
   const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
   const nextTopic = currentTopicIndex < lesson.topics.length - 1 ? lesson.topics[currentTopicIndex + 1] : null;
@@ -167,6 +180,8 @@ export default function TopicDetail() {
             </h1>
             <p className="text-muted-foreground">{topic.summary}</p>
           </div>
+
+          <ActivitySteps steps={steps} currentStepIndex={activeStepIndex} />
 
           <div className="space-y-6">
             {sortedActivities.map((activity: any) => {

@@ -181,7 +181,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Activity completion routes (replaces progress)
   app.post("/api/activities/:id/complete", authenticateUser, async (req: AuthRequest, res) => {
     try {
-      const completion = await storage.completeActivity(req.user!.id, req.params.id);
+      const userId = req.user!.id;
+      const activityId = req.params.id;
+      
+      // Complete the activity
+      const completion = await storage.completeActivity(userId, activityId);
+      
+      // Update user's currentTopicId to next incomplete topic
+      // Get all completions after this new one
+      const completions = await storage.getUserCompletions(userId);
+      const completedActivityIds = new Set(completions.map(c => c.activityId));
+      
+      // Find which topic this activity belongs to and check if it's now complete
+      const courses = await storage.getAllCourses();
+      let currentTopicComplete = false;
+      let currentTopicId: string | null = null;
+      
+      // Find the topic containing this activity
+      for (const courseData of courses) {
+        const course = await storage.getCourseWithContent(courseData.id);
+        if (!course) continue;
+        
+        for (const lesson of course.lessons) {
+          for (const topic of lesson.topics) {
+            const hasThisActivity = topic.activities.some(a => a.id === activityId);
+            if (hasThisActivity) {
+              currentTopicId = topic.id;
+              // Check if all activities in this topic are complete
+              currentTopicComplete = topic.activities.every(
+                activity => completedActivityIds.has(activity.id)
+              );
+              break;
+            }
+          }
+          if (currentTopicId) break;
+        }
+        if (currentTopicId) break;
+      }
+      
+      // If current topic is complete, find next incomplete topic
+      if (currentTopicComplete) {
+        let foundNextTopic = false;
+        
+        for (const courseData of courses) {
+          const course = await storage.getCourseWithContent(courseData.id);
+          if (!course) continue;
+          
+          for (const lesson of course.lessons) {
+            for (const topic of lesson.topics) {
+              // Skip until we pass the current topic
+              if (topic.id === currentTopicId) {
+                foundNextTopic = true;
+                continue;
+              }
+              
+              // Find first incomplete topic after current one
+              if (foundNextTopic) {
+                const hasIncompleteActivity = topic.activities.some(
+                  activity => !completedActivityIds.has(activity.id)
+                );
+                
+                if (hasIncompleteActivity || topic.activities.length === 0) {
+                  await storage.updateProfile(userId, { currentTopicId: topic.id });
+                  return res.json(completion);
+                }
+              }
+            }
+          }
+        }
+        
+        // If no next incomplete topic found, user completed everything - keep current topic
+      } else {
+        // Current topic not complete, keep it as currentTopicId
+        if (currentTopicId) {
+          await storage.updateProfile(userId, { currentTopicId });
+        }
+      }
+      
       res.json(completion);
     } catch (error: any) {
       console.error('Complete activity error:', error);

@@ -3,6 +3,48 @@
 ## Overview
 "La Escuela de Idiomas" is a production-ready, Spanish-only language learning platform designed to facilitate language acquisition through structured content and interactive activities. Its core purpose is to provide an engaging and effective learning experience, leveraging embedded external resources and a clear, hierarchical content model. The platform supports a freemium model with a focus on user progress tracking and a streamlined, intuitive user interface. The project aims to become a leading platform for Spanish speakers to learn new languages, starting with English.
 
+## Recent Changes
+
+### ✅ Enhanced Learning Experience - Auth Gates, Step Prompts & Progress (October 29, 2025)
+**Implemented three user-requested features to maximize simplicity and learning continuity:**
+
+- **Authentication-Gated Content** (Security & Freemium Model):
+  - All course/lesson/topic content now requires account creation
+  - Unauthenticated users automatically redirected to /auth when accessing learning content
+  - Protected routes: `/courses`, `/courses/:id`, `/lessons`, `/topics`, `/dashboard`, `/settings`
+  - Public routes: `/` (home), `/auth`, `/pricing`
+  - Component: `ProtectedRoute.tsx` provides clean auth gate with loading state
+
+- **Step-by-Step Visual Prompts** (User Guidance):
+  - New `ActivitySteps` component shows clear progression through each topic
+  - Visual indicators: "Paso 1: Ver el video" → "Paso 2: Practicar con tarjetas" → "Paso 3: Conversar con IA"
+  - Icons represent activity type (Video, BookOpenCheck, MessageSquare)
+  - Active step highlighted with primary color and ring
+  - Completed steps show checkmark icon
+  - Steps connected with visual progress lines
+  - Helps users understand what to do next at a glance
+
+- **Progress Bar & Next Topic Navigation** (Continuity):
+  - Real-time progress bar shows "X de Y completadas" at bottom of topic page
+  - Completion percentage updates immediately after marking activities complete
+  - When topic complete: Shows "¡Excelente trabajo!" message with prominent "Continuar" button
+  - Next topic title preview helps users see what's coming
+  - When lesson complete: Shows "¡Felicitaciones!" with "Volver al panel" button
+  - When incomplete: Clear message "Completa todas las actividades para continuar"
+  - Reduces friction and encourages continuous learning
+
+- **Testing**: End-to-end tests passed
+  - Auth gates correctly redirect unauthenticated users
+  - Step indicators update in real-time as activities are completed
+  - Progress bar accurately calculates completion percentage
+  - Next topic button appears only when topic is complete
+
+- **Files Created/Modified**:
+  - `client/src/components/ProtectedRoute.tsx` - New auth guard component
+  - `client/src/components/ActivitySteps.tsx` - New step indicator component
+  - `client/src/App.tsx` - Wrapped protected routes with ProtectedRoute
+  - `client/src/pages/TopicDetail.tsx` - Integrated step prompts and progress tracking
+
 ## User Preferences
 - **Design System**: Material Design-inspired with warm, encouraging aesthetics
 - **Color Palette**: Primary (orange/amber), accent (teal/cyan), warm neutrals

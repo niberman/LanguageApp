@@ -204,25 +204,25 @@ For password reset emails to work correctly, configure these in **Supabase Dashb
 
 **Development Site URL:**
 ```
-https://0bd2f1cb-08f6-4eb1-9f8d-35851ac058a7-00-3r4boy4judirr.picard.replit.dev
+https://your-replit-dev-url.replit.dev
 ```
 
 **Production Site URL (after deploying):**
 ```
-https://workspace-david2792.replit.app
+https://your-repl-name.replit.app
 ```
 
 **Redirect URLs (add all):**
 ```
-https://0bd2f1cb-08f6-4eb1-9f8d-35851ac058a7-00-3r4boy4judirr.picard.replit.dev/auth*
-https://workspace-david2792.replit.app/auth*
+https://your-replit-dev-url.replit.dev/auth*
+https://your-repl-name.replit.app/auth*
 http://localhost:5000/auth*
 ```
 
 **Why this is needed:**
 - Supabase sends password reset links that redirect users back to your app
 - Without proper configuration, links redirect to `localhost:3000` (Supabase's default)
-- The `?reset=true` parameter triggers the password update UI in the app
+- The app automatically detects password recovery tokens in the URL and shows the password update form
 
 ### Optional: Customize Email Template (Spanish)
 
@@ -274,6 +274,12 @@ Verify DATABASE_URL is correct and includes `?pgbouncer=true` for connection poo
    Replace `your-repl-name` with your actual Replit username and repl name.
 
 4. Verify Google OAuth is configured if using Google sign-in
+
+**How password reset works:**
+1. User requests password reset via "¿Olvidaste tu contraseña?" link
+2. Supabase sends email with recovery link containing `#access_token=...&type=recovery`
+3. App detects the `type=recovery` in the URL hash and shows password update form
+4. After successful update, user is redirected to dashboard
 
 **Why this matters**: When users click password reset links in their email, Supabase redirects them to the URL you configure. If this is set to `localhost:3000`, deployed users will see a broken page.
 

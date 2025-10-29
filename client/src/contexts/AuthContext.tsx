@@ -39,17 +39,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Set up auth state listener
           const { data: { subscription: sub } } = client.auth.onAuthStateChange(
-            (_event: any, session: any) => {
+            (event: any, session: any) => {
               if (mounted) {
                 setSession(session);
                 setUser(session?.user ?? null);
+                
+                // Handle password recovery flow
+                if (event === 'PASSWORD_RECOVERY') {
+                  // Session will be available for password update
+                  console.log('Password recovery session established');
+                }
               }
             }
           );
           subscription = sub;
         }
-      } catch (error) {
-        console.error('Auth check error:', error);
+      } catch (error: any) {
+        // Ignore refresh_token_not_found errors during password recovery flow
+        // These are expected when Supabase is processing a recovery token
+        if (error?.message?.includes('refresh_token_not_found')) {
+          console.log('Recovery flow in progress...');
+        } else {
+          console.error('Auth check error:', error);
+        }
         if (mounted) {
           setLoading(false);
         }

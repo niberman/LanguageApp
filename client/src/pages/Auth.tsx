@@ -36,15 +36,26 @@ export default function Auth() {
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
 
   useEffect(() => {
+    // Debug logging
+    console.log('Auth page - checking password reset flow');
+    console.log('URL:', window.location.href);
+    console.log('Hash:', window.location.hash);
+    console.log('Search:', searchString);
+    console.log('Session:', session);
+    
     // Check multiple conditions for password reset flow
     const params = new URLSearchParams(searchString);
     const isResetParam = params.get('reset') === 'true';
     const hasRecoveryType = window.location.hash.includes('type=recovery');
     
+    console.log('isResetParam:', isResetParam);
+    console.log('hasRecoveryType:', hasRecoveryType);
+    
     // ONLY show password reset form for actual recovery flows:
     // Must have type=recovery in hash AND reset=true query param
     // OR if we already have a session with reset=true (recovery session persists)
     if (hasRecoveryType || (isResetParam && session)) {
+      console.log('✅ Password reset mode activated');
       setIsPasswordReset(true);
     }
     // IMPORTANT: Don't set to false here - once we detect recovery, stay in password reset mode

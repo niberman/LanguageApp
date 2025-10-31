@@ -424,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's next topic (continue learning)
+  // Get user's next activity (continue learning or start from beginning)
   app.get("/api/dashboard/next-topic", authenticateUser, async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
@@ -438,6 +438,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all courses
       const courses = await storage.getAllCourses();
+      
+      // Helper function to determine next activity within a topic
+      const getNextActivityPath = (topic: any, lesson: any, course: any) => {
+        // Find first incomplete activity (video first, then flashcards)
+        const videoActivity = topic.activities.find((a: any) => a.type === 'video');
+        const flashcardActivity = topic.activities.find((a: any) => a.type === 'quizlet');
+        
+        // Check which activities are completed
+        const videoCompleted = videoActivity && completedActivityIds.has(videoActivity.id);
+        const flashcardCompleted = flashcardActivity && completedActivityIds.has(flashcardActivity.id);
+        
+        // Determine the path
+        if (!videoCompleted && videoActivity) {
+          // Start with video (or resume video)
+          return `/courses/${course.id}/lessons/${lesson.id}/topics/${topic.id}`;
+        } else if (!flashcardCompleted && flashcardActivity) {
+          // Video done, go to flashcards
+          return `/courses/${course.id}/lessons/${lesson.id}/topics/${topic.id}/flashcards`;
+        } else {
+          // All activities complete in this topic, default to video page
+          return `/courses/${course.id}/lessons/${lesson.id}/topics/${topic.id}`;
+        }
+      };
       
       // If user has a saved currentTopicId, validate it and return it
       if (profile?.currentTopicId) {
@@ -455,6 +478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   lessonTitle: lesson.title,
                   courseId: course.id,
                   courseTitle: course.title,
+                  navigationPath: getNextActivityPath(topic, lesson, course),
                 });
               }
             }
@@ -485,6 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 lessonTitle: lesson.title,
                 courseId: course.id,
                 courseTitle: course.title,
+                navigationPath: getNextActivityPath(topic, lesson, course),
               });
             }
           }
@@ -505,6 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lessonTitle: lesson.title,
             courseId: course.id,
             courseTitle: course.title,
+            navigationPath: getNextActivityPath(topic, lesson, course),
           });
         }
       }

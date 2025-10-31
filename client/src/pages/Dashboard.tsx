@@ -126,10 +126,10 @@ export default function Dashboard() {
                     size="lg"
                     onClick={handleContinueLearning}
                     data-testid="button-continue-level"
-                    className="text-xl py-6 px-12 h-auto"
+                    className="text-lg md:text-xl py-6 px-4 md:px-12 h-auto"
                     disabled={isLoadingNextTopic}
                   >
-                    <Play className="mr-3 h-6 w-6" />
+                    <Play className="mr-2 md:mr-3 h-5 w-5 md:h-6 md:w-6" />
                     {isLoadingNextTopic ? "Cargando..." : (stats?.completedActivities === 0 ? "Empezar Ahora" : "Continuar Aprendiendo")}
                   </Button>
                 </CardContent>

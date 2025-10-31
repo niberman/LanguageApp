@@ -44,7 +44,7 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
       {type === 'quizlet' && (
         <div className="px-3 sm:px-4 py-2 bg-primary/10 border-b border-primary/20">
           <p className="text-xs sm:text-sm text-muted-foreground">
-            💡 Si no ves las tarjetas abajo, haz clic en "Abrir en pestaña nueva" para practicar en Quizlet
+            <strong>Nota:</strong> Si no ves las tarjetas abajo, haz clic en "Abrir en pestaña nueva" para practicar en Quizlet
           </p>
         </div>
       )}

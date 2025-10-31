@@ -5,6 +5,42 @@
 
 ## Recent Changes
 
+### ✅ Smart Resume & Back Navigation (October 31, 2025)
+**Implemented intelligent navigation for new and returning users:**
+
+- **New User Flow** ("Empezar Ahora"):
+  - Dashboard button takes new users directly to first video of first topic
+  - No manual navigation needed - instant start
+  - Clear onboarding path
+
+- **Returning User Flow** ("Continuar Aprendiendo"):
+  - Smart resume: Backend determines exact next activity
+  - If video incomplete → resumes at video page
+  - If video complete, flashcards incomplete → resumes at flashcards page
+  - If topic complete → resumes at next incomplete topic
+  - Seamless continuation of learning journey
+
+- **Back Navigation Buttons**:
+  - Video page: "Anterior: [topic]" → Previous topic's flashcards (or "Volver a la lección" if first topic)
+  - Flashcards page: "Volver al video" → Current topic's video
+  - Allows reviewing previous content while maintaining forward progress
+
+- **Edge Case Handling**:
+  - Topics without flashcards: Video completion navigates to next topic directly
+  - Last topic completion: Returns to lesson overview
+  - Prevents dead-end navigation
+
+- **Backend Intelligence** (`/api/dashboard/next-topic`):
+  - Returns `navigationPath` with exact URL to navigate to
+  - Checks user completions to determine resume point
+  - Saves `currentTopicId` in user profile for consistency
+
+- **Files Modified**:
+  - `server/routes.ts` - Smart navigation path calculation
+  - `client/src/pages/Dashboard.tsx` - Use navigationPath from backend
+  - `client/src/pages/TopicDetail.tsx` - Previous topic back button, smart forward navigation
+  - `client/src/pages/TopicFlashcards.tsx` - Already had back button
+
 ### ✅ Simplified Progressive Learning Flow (October 31, 2025)
 **Completely redesigned UI for maximum simplicity and progressive learning:**
 

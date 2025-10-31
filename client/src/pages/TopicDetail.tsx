@@ -219,16 +219,30 @@ export default function TopicDetail() {
                   onInteraction={() => {}}
                   isCompleted={isVideoCompleted}
                   onComplete={() => {
-                    const navigateTo = hasQuizlet 
-                      ? `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`
-                      : null;
+                    // Determine where to navigate
+                    let navigateTo: string | null = null;
                     
-                    // If already completed, just navigate without mutation
+                    if (hasQuizlet) {
+                      // Has flashcards - go to flashcards
+                      navigateTo = `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`;
+                    } else {
+                      // No flashcards - find next topic with video or go back to lesson
+                      const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
+                      const nextTopic = currentTopicIndex < lesson.topics.length - 1 ? lesson.topics[currentTopicIndex + 1] : null;
+                      
+                      if (nextTopic) {
+                        navigateTo = `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`;
+                      } else {
+                        navigateTo = `/courses/${params?.courseId}/lessons/${params?.lessonId}`;
+                      }
+                    }
+                    
+                    // If already completed, just navigate
                     if (isVideoCompleted && navigateTo) {
                       setLocation(navigateTo);
-                    } else if (!isVideoCompleted) {
+                    } else if (!isVideoCompleted && navigateTo) {
                       // Not completed - await mutation then navigate
-                      handleActivityComplete(firstVideo.id, navigateTo ? () => setLocation(navigateTo) : undefined);
+                      handleActivityComplete(firstVideo.id, () => setLocation(navigateTo!));
                     }
                   }}
                   nextButtonText="Continuar"

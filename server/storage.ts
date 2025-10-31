@@ -21,9 +21,20 @@ import {
   AIChatActivity,
 } from "@shared/models";
 
-const connectionString = process.env.DATABASE_URL!;
-const client = postgres(connectionString);
-export const db = drizzle(client, { schema });
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+
+let db: ReturnType<typeof drizzle> | undefined;
+if (hasDatabaseUrl) {
+  const connectionString = process.env.DATABASE_URL as string;
+  const client = postgres(connectionString);
+  db = drizzle(client, { schema });
+}
+
+// Export a value so imports don't fail in dev when DB is absent
+// Note: routes that rely on `db` should also guard with DATABASE_URL checks
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+export { db };
 
 export interface IStorage {
   // Profile operations
@@ -44,10 +55,11 @@ export interface IStorage {
   addToWaitlist(email: string): Promise<void>;
 }
 
-export class DbStorage implements IStorage {
+class DbStorage implements IStorage {
+  private db = db!;
   // Profile operations
   async getProfile(userId: string): Promise<Profile | undefined> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(schema.profiles)
       .where(eq(schema.profiles.id, userId))
@@ -56,7 +68,7 @@ export class DbStorage implements IStorage {
   }
 
   async createProfile(profile: InsertProfile & { id: string }): Promise<Profile> {
-    const result = await db
+    const result = await this.db
       .insert(schema.profiles)
       .values(profile)
       .returning();
@@ -64,7 +76,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateProfile(userId: string, data: Partial<InsertProfile>): Promise<Profile | undefined> {
-    const result = await db
+    const result = await this.db
       .update(schema.profiles)
       .set(data)
       .where(eq(schema.profiles.id, userId))
@@ -74,12 +86,12 @@ export class DbStorage implements IStorage {
 
   // Course operations (NEW OOP MODEL)
   async getAllCourses(): Promise<Course[]> {
-    return db.select().from(schema.courses);
+    return this.db.select().from(schema.courses);
   }
 
   async getCourseWithContent(courseId: string): Promise<CourseModel | null> {
     // Get course
-    const courseResults = await db
+    const courseResults = await this.db
       .select()
       .from(schema.courses)
       .where(eq(schema.courses.id, courseId))
@@ -89,7 +101,7 @@ export class DbStorage implements IStorage {
     const course = courseResults[0];
 
     // Get lessons for this course
-    const lessonResults = await db
+    const lessonResults = await this.db
       .select()
       .from(schema.lessons)
       .where(eq(schema.lessons.courseId, courseId))
@@ -102,7 +114,7 @@ export class DbStorage implements IStorage {
       const lessonModel = new LessonModel(lesson.id, lesson.title, lesson.order);
 
       // Get topics for this lesson
-      const topicResults = await db
+      const topicResults = await this.db
         .select()
         .from(schema.topics)
         .where(eq(schema.topics.lessonId, lesson.id));
@@ -111,7 +123,7 @@ export class DbStorage implements IStorage {
         const topicModel = new TopicModel(topic.id, topic.title, topic.summary);
 
         // Get activities for this topic, ordered by type (videos first, then quizlet, then aiChat)
-        const activityResults = await db
+        const activityResults = await this.db
           .select()
           .from(schema.activities)
           .where(eq(schema.activities.topicId, topic.id))
@@ -157,7 +169,7 @@ export class DbStorage implements IStorage {
   // Activity completion operations
   async completeActivity(userId: string, activityId: string): Promise<ActivityCompletion> {
     // Check if already completed
-    const existing = await db
+    const existing = await this.db
       .select()
       .from(schema.activityCompletions)
       .where(
@@ -172,7 +184,7 @@ export class DbStorage implements IStorage {
       return existing[0];
     }
 
-    const result = await db
+    const result = await this.db
       .insert(schema.activityCompletions)
       .values({ userId, activityId })
       .returning();
@@ -180,7 +192,7 @@ export class DbStorage implements IStorage {
   }
 
   async getUserCompletions(userId: string): Promise<ActivityCompletion[]> {
-    return db
+    return this.db
       .select()
       .from(schema.activityCompletions)
       .where(eq(schema.activityCompletions.userId, userId))
@@ -189,7 +201,7 @@ export class DbStorage implements IStorage {
 
   async getUserStreak(userId: string): Promise<number> {
     // Get distinct days with activity, ordered by date descending
-    const completions = await db
+    const completions = await this.db
       .selectDistinct({
         date: sql<string>`DATE(${schema.activityCompletions.completedAt})`,
       })
@@ -223,11 +235,98 @@ export class DbStorage implements IStorage {
 
   // Waitlist operations
   async addToWaitlist(email: string): Promise<void> {
-    await db
+    await this.db
       .insert(schema.waitlistEmails)
       .values({ email })
       .onConflictDoNothing();
   }
 }
 
-export const storage = new DbStorage();
+class DevStorage implements IStorage {
+  private profiles = new Map<string, Profile>();
+  private completions: ActivityCompletion[] = [] as any;
+
+  async getProfile(userId: string): Promise<Profile | undefined> {
+    return this.profiles.get(userId);
+  }
+
+  async createProfile(profile: InsertProfile & { id: string }): Promise<Profile> {
+    const created: Profile = {
+      id: profile.id,
+      displayName: profile.displayName ?? null,
+      locale: profile.locale ?? "en",
+      currentTopicId: null,
+      createdAt: new Date(),
+    } as any;
+    this.profiles.set(created.id, created);
+    return created;
+  }
+
+  async updateProfile(userId: string, data: Partial<InsertProfile>): Promise<Profile | undefined> {
+    const existing = this.profiles.get(userId);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...data } as Profile;
+    this.profiles.set(userId, updated);
+    return updated;
+  }
+
+  async getAllCourses(): Promise<Course[]> {
+    // In dev without DB, return empty – routes have their own dev course fallback
+    return [] as any;
+  }
+
+  async getCourseWithContent(_courseId: string): Promise<CourseModel | null> {
+    // In dev without DB, return null – routes handle dev content
+    return null;
+  }
+
+  async completeActivity(userId: string, activityId: string): Promise<ActivityCompletion> {
+    const existing = this.completions.find(
+      (c) => (c as any).userId === userId && (c as any).activityId === activityId,
+    );
+    if (existing) return existing;
+    const completion: ActivityCompletion = {
+      id: crypto.randomUUID(),
+      userId: userId as any,
+      activityId: activityId as any,
+      completedAt: new Date(),
+    } as any;
+    this.completions.push(completion);
+    return completion;
+  }
+
+  async getUserCompletions(userId: string): Promise<ActivityCompletion[]> {
+    return this.completions
+      .filter((c) => (c as any).userId === userId)
+      .sort((a, b) => +new Date((b as any).completedAt) - +new Date((a as any).completedAt));
+  }
+
+  async getUserStreak(userId: string): Promise<number> {
+    const dates = Array.from(
+      new Set(
+        this.completions
+          .filter((c) => (c as any).userId === userId)
+          .map((c) => new Date((c as any).completedAt).toISOString().slice(0, 10)),
+      ),
+    ).sort((a, b) => (a < b ? 1 : -1));
+    if (dates.length === 0) return 0;
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < dates.length; i++) {
+      const expected = new Date(today);
+      expected.setDate(today.getDate() - i);
+      const expectedStr = expected.toISOString().slice(0, 10);
+      if (dates[i] === expectedStr) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  async addToWaitlist(_email: string): Promise<void> {
+    // No-op in memory
+    return;
+  }
+}
+
+export const storage: IStorage = hasDatabaseUrl ? new DbStorage() : new DevStorage();

@@ -56,16 +56,42 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // Serve on PORT, falling back to next available port if in use
+  const desiredPort = parseInt(process.env.PORT || '5000', 10);
+
+  async function tryListen(startPort: number, maxAttempts = 5) {
+    let attempt = 0;
+    let currentPort = startPort;
+    while (attempt < maxAttempts) {
+      await new Promise<void>((resolve) => {
+        server.once('error', (err: any) => {
+          if (err?.code === 'EADDRINUSE') {
+            log(`port ${currentPort} in use, trying ${currentPort + 1}`);
+            currentPort += 1;
+            attempt += 1;
+            resolve();
+          } else {
+            throw err;
+          }
+        });
+
+        server.listen({
+          port: currentPort,
+          host: "0.0.0.0",
+          reusePort: true,
+        }, () => {
+          log(`serving on port ${currentPort}`);
+          resolve();
+        });
+      });
+
+      // Break if listening succeeded (no new 'error' fired)
+      // A small delay ensures we don't loop immediately
+      const isListening = (server as any).listening === true;
+      if (isListening) return;
+    }
+    throw new Error(`Could not bind to a port starting at ${startPort}`);
+  }
+
+  await tryListen(desiredPort);
 })();

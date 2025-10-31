@@ -74,3 +74,9 @@ export const profileApi = {
 export const waitlistApi = {
   add: (email: string) => apiRequest('/api/waitlist', { method: 'POST', body: JSON.stringify({ email }) }),
 };
+
+// AI Chat API
+export const aiApi = {
+  chat: (messages: { role: 'system' | 'user' | 'assistant'; content: string }[], context: any) =>
+    apiRequest('/api/ai/chat', { method: 'POST', body: JSON.stringify({ messages, context }) }),
+};

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ export default function CourseDetail() {
   const [, params] = useRoute('/courses/:id');
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const { data: course, isLoading } = useQuery({
     queryKey: ['/api/courses', params?.id],
@@ -19,6 +21,23 @@ export default function CourseDetail() {
       const res = await fetch(`/api/courses/${params?.id}`);
       return res.json();
     },
+  });
+
+  const { data: completions = [] } = useQuery({
+    queryKey: ['/api/completions'],
+    queryFn: async () => {
+      if (globalThis.__supabaseInitPromise) {
+        await globalThis.__supabaseInitPromise;
+      }
+      const client = (globalThis as any).__supabaseClient;
+      const { data } = await client?.auth.getSession();
+      const token = data?.session?.access_token || '';
+      const res = await fetch('/api/completions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.json();
+    },
+    enabled: !!user,
   });
 
   if (isLoading) {
@@ -81,6 +100,14 @@ export default function CourseDetail() {
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold mb-4">{t('course.lessons')}</h2>
             {course.lessons.map((lesson: any) => {
+              const allActivities = (lesson.topics || []).flatMap((t: any) => t.activities || []);
+              const totalActivities = allActivities.length;
+              const safeCompletions = Array.isArray(completions) ? completions : [];
+              const completedSet = new Set(safeCompletions.map((c: any) => c.activityId));
+              const completedCount = allActivities.filter((a: any) => completedSet.has(a.id)).length;
+              const progressPercent = totalActivities > 0 ? Math.round((completedCount / totalActivities) * 100) : 0;
+              const completedLabel = t('common.completed');
+              const completedText = completedLabel === 'common.completed' ? 'completadas' : completedLabel;
               return (
                 <Card
                   key={lesson.id}
@@ -94,6 +121,15 @@ export default function CourseDetail() {
                       {lesson.topics.length} {t('lesson.topics').toLowerCase()}
                     </CardDescription>
                   </CardHeader>
+                  {user && (
+                    <CardContent>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground">{completedCount} / {totalActivities} {completedText}</span>
+                        <span className="text-sm font-medium">{progressPercent}%</span>
+                      </div>
+                      <Progress value={progressPercent} className="h-2" />
+                    </CardContent>
+                  )}
                 </Card>
               );
             })}

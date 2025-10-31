@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -15,11 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import EmbedFrame from "@/components/EmbedFrame";
-import ActivitySteps from "@/components/ActivitySteps";
 import { queryClient } from "@/lib/queryClient";
-import OnboardingCoach from "@/components/OnboardingCoach";
-import { hasOnboardingSeen, markOnboardingSeen } from "@/lib/onboarding";
-import ConversationPartner from "@/components/ConversationPartner";
 import { useState, useEffect } from "react";
 
 export default function TopicFlashcards() {
@@ -30,9 +25,6 @@ export default function TopicFlashcards() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
-
-  // Onboarding coach local navigation state so "Siguiente" advances
-  const [coachIndex, setCoachIndex] = useState<number | null>(null);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ["/api/courses", params?.courseId],
@@ -96,6 +88,7 @@ export default function TopicFlashcards() {
 
   const lesson = course.lessons.find((l: any) => l.id === params?.lessonId);
   const topic = lesson?.topics.find((t: any) => t.id === params?.topicId);
+  
   if (!lesson || !topic) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -128,13 +121,50 @@ export default function TopicFlashcards() {
     }
   }, [videoActivity, completedIds, params, toast, setLocation]);
 
-  const steps = activityList.map((a, idx) => ({
-    id: a.id,
-    label: a.title || "",
-    type: a.type,
-    isCompleted: completedIds.has(a.id),
-  }));
-  const currentIndex = Math.max(steps.findIndex((s) => !s.isCompleted), 1);
+  // Find next topic for navigation after completing flashcards
+  const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
+  const nextTopic = currentTopicIndex < lesson.topics.length - 1 ? lesson.topics[currentTopicIndex + 1] : null;
+
+  const handleFlashcardComplete = (activityId: string) => {
+    if (!user) {
+      toast({
+        title: "Por favor inicia sesión",
+        description: "Inicia sesión para seguir tu progreso",
+      });
+      setLocation("/auth");
+      return;
+    }
+    
+    completeActivity.mutate(activityId);
+    toast({
+      title: "¡Progreso guardado!",
+      description: "Actividad marcada como completada",
+    });
+
+    // Navigate to next topic after completion
+    if (nextTopic) {
+      setLocation(
+        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
+      );
+    } else {
+      // No more topics, go back to lesson
+      setLocation(
+        `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
+      );
+    }
+  };
+
+  const handleNavigateNext = () => {
+    if (nextTopic) {
+      setLocation(
+        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
+      );
+    } else {
+      setLocation(
+        `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -152,7 +182,7 @@ export default function TopicFlashcards() {
               data-testid="button-back-to-topic"
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
-              {t("topic.backToLesson")}
+              Volver al video
             </Button>
           </div>
 
@@ -160,8 +190,6 @@ export default function TopicFlashcards() {
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{topic.title}</h1>
             <p className="text-muted-foreground">Tarjetas de vocabulario</p>
           </div>
-
-          <ActivitySteps steps={steps} currentStepIndex={currentIndex} />
 
           <div className="space-y-6">
             {quizletActivities.length === 0 && (
@@ -181,107 +209,15 @@ export default function TopicFlashcards() {
                 title="Practicar con Quizlet"
                 onInteraction={() => {}}
                 isCompleted={completedIds.has(activity.id)}
-                onComplete={() => {
-                  if (!user) {
-                    toast({
-                      title: "Por favor inicia sesión",
-                      description: "Inicia sesión para seguir tu progreso",
-                    });
-                    setLocation("/auth");
-                    return;
-                  }
-                  completeActivity.mutate(activity.id);
-                  toast({
-                    title: "¡Progreso guardado!",
-                    description: "Actividad marcada como completada",
-                  });
-                  setLocation(
-                    `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
-                  );
-                }}
-                onNavigateNext={() =>
-                  setLocation(
-                    `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
-                  )
-                }
-                nextButtonText="Volver al tema"
+                onComplete={() => handleFlashcardComplete(activity.id)}
+                onNavigateNext={handleNavigateNext}
+                nextButtonText={nextTopic ? `Siguiente: ${nextTopic.title}` : "Volver a la lección"}
               />
             ))}
-            {(() => {
-              const ai = activityList.find((a: any) => a.type === "aiChat");
-              if (!ai) return null;
-              return (
-                <Card key={ai.id}>
-                  <CardHeader>
-                    <CardTitle>Practica conversación (opcional)</CardTitle>
-                    <CardDescription>Refuerza lo aprendido conversando con IA</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ConversationPartner
-                      courseTitle={course.title}
-                      lessonTitle={lesson.title}
-                      topicTitle={topic.title}
-                      activityType="aiChat"
-                      promptSet={ai.promptSet}
-                      collapsedByDefault
-                      onComplete={() => completeActivity.mutate(ai.id)}
-                    />
-                  </CardContent>
-                </Card>
-              );
-            })()}
           </div>
         </div>
       </main>
       <Footer />
-      {(() => {
-        const key = `topic.flashcards.${params?.topicId}`;
-        const stepsForCoach = [
-          { id: "quizlet", title: "1) Practica con tarjetas", description: "Recorre las tarjetas y practica el vocabulario del tema." },
-          { id: "continue", title: "2) Continúa al siguiente paso", description: "Cuando termines aquí, vuelve al tema para continuar." },
-        ];
-
-        const allQuizletCompleted = quizletActivities.every((a: any) => completedIds.has(a.id));
-        const completedMap: Record<string, boolean> = {
-          quizlet: allQuizletCompleted,
-          continue: allQuizletCompleted,
-        };
-        const firstIncompleteIndex = stepsForCoach.findIndex((s) => !completedMap[s.id]);
-        const computedIndex = firstIncompleteIndex === -1 ? stepsForCoach.length - 1 : firstIncompleteIndex;
-        const activeIndex = coachIndex ?? computedIndex;
-
-        if (hasOnboardingSeen(key)) return null;
-
-        return (
-          <OnboardingCoach
-            steps={stepsForCoach}
-            activeIndex={activeIndex}
-            onNext={() => {
-              const currentStep = stepsForCoach[activeIndex];
-              
-              // When clicking "Listo" on the "continue" step, navigate back to topic
-              if (currentStep?.id === "continue") {
-                // Navigate back to the main topic page to continue with AI chat or next topic
-                setLocation(`/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`);
-                markOnboardingSeen(key);
-                return;
-              }
-              
-              // Otherwise advance coach step
-              if (activeIndex >= stepsForCoach.length - 1) {
-                markOnboardingSeen(key);
-              } else {
-                setCoachIndex(activeIndex + 1);
-              }
-            }}
-            onSkip={() => {
-              markOnboardingSeen(key);
-            }}
-          />
-        );
-      })()}
     </div>
   );
 }
-
-

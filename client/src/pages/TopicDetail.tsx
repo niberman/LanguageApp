@@ -101,6 +101,10 @@ export default function TopicDetail() {
     );
   }
 
+  // Find previous topic for back navigation
+  const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
+  const previousTopic = currentTopicIndex > 0 ? lesson.topics[currentTopicIndex - 1] : null;
+
   const sortedActivities = topic.activities;
   const firstVideo = sortedActivities.find((a: any) => a.type === "video");
   const hasQuizlet = sortedActivities.some((a: any) => a.type === "quizlet");
@@ -145,19 +149,34 @@ export default function TopicDetail() {
 
       <main className="flex-1 py-6 sm:py-12">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6">
-          <div className="mb-8">
-            <Button
-              variant="ghost"
-              onClick={() =>
-                setLocation(
-                  `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
-                )
-              }
-              data-testid="button-back-to-lesson"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              {t("topic.backToLesson")}
-            </Button>
+          <div className="mb-8 flex flex-wrap items-center gap-2">
+            {previousTopic ? (
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  setLocation(
+                    `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${previousTopic.id}/flashcards`,
+                  )
+                }
+                data-testid="button-back-to-previous-activity"
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Anterior: {previousTopic.title}
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  setLocation(
+                    `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
+                  )
+                }
+                data-testid="button-back-to-lesson"
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {t("topic.backToLesson")}
+              </Button>
+            )}
           </div>
 
           <div className="mb-8">

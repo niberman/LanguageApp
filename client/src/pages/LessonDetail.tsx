@@ -141,14 +141,33 @@ export default function LessonDetail() {
       {(() => {
         const key = `lesson.${params?.lessonId}`;
         if (hasOnboardingSeen(key)) return null;
+        
+        // Find first incomplete topic
+        const safeCompletions = Array.isArray(completions) ? completions : [];
+        const completedSet = new Set(safeCompletions.map((c: any) => c.activityId));
+        
+        const firstIncompleteTopic = lesson.topics.find((topic: any) => {
+          const totalActivities = (topic.activities || []).length;
+          const completedCount = (topic.activities || []).filter((a: any) => completedSet.has(a.id)).length;
+          return completedCount < totalActivities;
+        });
+        
+        // If all topics complete, don't show coach
+        if (!firstIncompleteTopic) return null;
+        
         const steps = [
           { id: 'choose-topic', title: 'Elige un tema para empezar', description: 'Abre un tema y sigue los pasos: video → tarjetas → conversación.' },
         ];
+        
         return (
           <OnboardingCoach
             steps={steps}
             activeIndex={0}
-            onNext={() => markOnboardingSeen(key)}
+            onNext={() => {
+              // Navigate to first incomplete topic
+              setLocation(`/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${firstIncompleteTopic.id}`);
+              markOnboardingSeen(key);
+            }}
             onSkip={() => markOnboardingSeen(key)}
           />
         );

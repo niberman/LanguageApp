@@ -5,6 +5,29 @@
 
 ## Recent Changes
 
+### ✅ Mobile Navigation & Clickable Feature Cards (October 31, 2025)
+**Improved mobile accessibility and home page interactivity:**
+
+- **Mobile Menu Navigation**:
+  - Added hamburger menu button for mobile screens (Sheet drawer)
+  - Desktop navigation items (Inicio, Cursos, Panel) now accessible on iPhone and small screens
+  - Menu opens from right side with clear navigation options
+  - Auto-closes after selecting a navigation item
+  - Respects authentication state (Panel only shown to logged-in users)
+
+- **Clickable Feature Cards**:
+  - Home page feature cards now clickable and navigate to their pages
+  - "Cursos" card → /courses page
+  - "Panel" card → /dashboard page
+  - "Chat IA" card → Not clickable (coming soon badge)
+  - Keyboard-accessible using semantic Link components
+  - Visual cursor pointer indicates clickability
+
+- **Files Modified**:
+  - `client/src/components/Navbar.tsx` - Added Sheet-based mobile menu
+  - `client/src/components/FeatureCard.tsx` - Made cards clickable with href prop
+  - `client/src/pages/Home.tsx` - Added navigation hrefs to feature cards
+
 ### ✅ Smart Resume & Back Navigation (October 31, 2025)
 **Implemented intelligent navigation for new and returning users:**
 

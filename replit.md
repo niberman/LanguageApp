@@ -5,6 +5,44 @@
 
 ## Recent Changes
 
+### ✅ Seamless Activity Navigation - "Completado" Buttons Now Navigate (October 31, 2025)
+**Fixed critical UX issue where completed activities blocked progression:**
+
+- **Smart Navigation Buttons** (Flow Continuity):
+  - Removed disabled state from completed activities - buttons now actively navigate
+  - Video completed: Button changes from "Completar y continuar" → "Ir a tarjetas"
+  - Flashcards completed: Button changes to "Volver al tema"
+  - Users can revisit activities and continue learning without getting stuck
+  
+- **EmbedFrame Component Enhancement**:
+  - Added `onNavigateNext` prop for post-completion navigation
+  - Added `nextButtonText` prop for custom button labels
+  - Button behavior: Not completed → Complete + Navigate, Already completed → Navigate only
+  - Improved UX: Clear calls-to-action that adapt to completion state
+
+- **Complete Learning Flow**:
+  - Video → Click "Completar y continuar" → Navigate to flashcards automatically
+  - Flashcards → Click "Completar y continuar" → Navigate back to topic automatically
+  - Completed video → Click "Ir a tarjetas" → Revisit flashcards anytime
+  - Completed flashcards → Click "Volver al tema" → Return to topic anytime
+  - Smooth progression through all 6 learning topics
+
+- **Database Verification**:
+  - Confirmed all 6 topics have Quizlet flashcard activities with valid embed URLs
+  - Topics: "¿Cómo te llamas?", "Cómo decir 'Soy de…'", "¿Te gusta viajar?", "¿Trabajas?", "¿Te gusta?", "Saludos"
+
+- **Testing**: End-to-end flow test passed
+  - Video completion navigates to flashcards ✅
+  - Flashcard completion navigates back to topic ✅
+  - Progress tracking shows "2 de 2 completadas" ✅
+  - Completed buttons remain clickable and navigate correctly ✅
+  - Next topic navigation works when all activities complete ✅
+
+- **Files Modified**:
+  - `client/src/components/EmbedFrame.tsx` - Smart navigation button logic
+  - `client/src/pages/TopicDetail.tsx` - Video-to-flashcards navigation
+  - `client/src/pages/TopicFlashcards.tsx` - Flashcards-to-topic navigation
+
 ### ✅ Enhanced Learning Experience - Auth Gates, Step Prompts & Progress (October 29, 2025)
 **Implemented three user-requested features to maximize simplicity and learning continuity:**
 

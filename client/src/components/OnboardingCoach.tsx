@@ -24,28 +24,28 @@ export default function OnboardingCoach({ steps, activeIndex, onNext, onSkip, cl
   const isLast = activeIndex === steps.length - 1;
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-40 max-w-sm w-[92vw] sm:w-[420px]", className)} data-testid="onboarding-coach">
-      <Card className="shadow-xl border-primary/20">
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-3">
-            <CardTitle className="text-base">{step.title}</CardTitle>
+    <div className={cn("fixed bottom-3 right-3 z-40 max-w-[280px] w-[85vw] sm:w-[280px]", className)} data-testid="onboarding-coach">
+      <Card className="shadow-md border-primary/10">
+        <CardHeader className="pb-1.5 pt-3 px-3">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-sm font-medium">{step.title}</CardTitle>
             <button
               aria-label="Cerrar"
               onClick={onSkip}
-              className="p-1 rounded hover:bg-muted text-muted-foreground"
+              className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
               data-testid="onboarding-skip"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <p className="text-sm text-muted-foreground mb-4">{step.description}</p>
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">Paso {activeIndex + 1} de {steps.length}</div>
-            <Button size="sm" onClick={onNext} data-testid="onboarding-next">
+        <CardContent className="pt-0 pb-3 px-3">
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{step.description}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[10px] text-muted-foreground">Paso {activeIndex + 1} de {steps.length}</div>
+            <Button size="sm" onClick={onNext} data-testid="onboarding-next" className="h-7 text-xs px-2.5">
               {isLast ? "Listo" : "Siguiente"}
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
             </Button>
           </div>
         </CardContent>

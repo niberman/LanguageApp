@@ -37,7 +37,10 @@ export default function Dashboard() {
   });
 
   const handleContinueLearning = () => {
-    if (nextTopic?.topicId) {
+    if (nextTopic?.navigationPath) {
+      setLocation(nextTopic.navigationPath);
+    } else if (nextTopic?.topicId) {
+      // Fallback to topic page if no navigationPath
       setLocation(`/topic/${nextTopic.topicId}`);
     } else {
       // Fallback to courses page if no topic found

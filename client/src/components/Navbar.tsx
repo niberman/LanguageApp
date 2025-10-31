@@ -1,14 +1,23 @@
 import { Link, useLocation } from 'wouter';
-import { GraduationCap, LogOut } from 'lucide-react';
+import { GraduationCap, LogOut, Menu } from 'lucide-react';
+import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 export default function Navbar() {
   const { t } = useLanguage();
   const { user, signOut } = useAuth();
   const [location, setLocation] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/', label: t('nav.home') },
@@ -19,6 +28,11 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await signOut();
     setLocation('/');
+  };
+
+  const handleNavClick = (path: string) => {
+    setLocation(path);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -32,6 +46,7 @@ export default function Navbar() {
             </div>
           </Link>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link key={item.path} href={item.path}>
@@ -58,6 +73,33 @@ export default function Navbar() {
                 </Button>
               </Link>
             )}
+
+            {/* Mobile Menu */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden" data-testid="button-mobile-menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <SheetHeader>
+                  <SheetTitle>Menú</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-2 mt-6">
+                  {navItems.map((item) => (
+                    <Button
+                      key={item.path}
+                      variant={location === item.path ? 'secondary' : 'ghost'}
+                      className="justify-start"
+                      onClick={() => handleNavClick(item.path)}
+                      data-testid={`mobile-link-${item.label.toLowerCase()}`}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

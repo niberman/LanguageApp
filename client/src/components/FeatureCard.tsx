@@ -1,16 +1,30 @@
 import { Card } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 interface FeatureCardProps {
   icon: LucideIcon;
   title: string;
   description: string;
   badge?: string;
+  href?: string;
 }
 
-export default function FeatureCard({ icon: Icon, title, description, badge }: FeatureCardProps) {
+export default function FeatureCard({ icon: Icon, title, description, badge, href }: FeatureCardProps) {
+  const [, setLocation] = useLocation();
+  
+  const handleClick = () => {
+    if (href) {
+      setLocation(href);
+    }
+  };
+
   return (
-    <Card className="p-6 hover-elevate transition-shadow" data-testid={`card-${title.toLowerCase().replace(/\s/g, '-')}`}>
+    <Card 
+      className={`p-6 hover-elevate transition-shadow ${href ? 'cursor-pointer' : ''}`}
+      data-testid={`card-${title.toLowerCase().replace(/\s/g, '-')}`}
+      onClick={handleClick}
+    >
       <div className="flex flex-col items-center text-center gap-4">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
           <Icon className="h-8 w-8 text-primary" />

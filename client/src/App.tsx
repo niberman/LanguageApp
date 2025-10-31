@@ -12,6 +12,7 @@ import Courses from "@/pages/Courses";
 import CourseDetail from "@/pages/CourseDetail";
 import LessonDetail from "@/pages/LessonDetail";
 import TopicDetail from "@/pages/TopicDetail";
+import TopicFlashcards from "@/pages/TopicFlashcards";
 import TopicRedirect from "@/pages/TopicRedirect";
 import Dashboard from "@/pages/Dashboard";
 import Settings from "@/pages/Settings";
@@ -44,6 +45,11 @@ function Router() {
       <Route path="/courses/:courseId/lessons/:lessonId/topics/:topicId">
         <ProtectedRoute>
           <TopicDetail />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/courses/:courseId/lessons/:lessonId/topics/:topicId/flashcards">
+        <ProtectedRoute>
+          <TopicFlashcards />
         </ProtectedRoute>
       </Route>
       <Route path="/topic/:topicId">

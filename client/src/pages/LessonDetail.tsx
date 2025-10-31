@@ -3,15 +3,19 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import OnboardingCoach from '@/components/OnboardingCoach';
+import { hasOnboardingSeen, markOnboardingSeen } from '@/lib/onboarding';
 
 export default function LessonDetail() {
   const [, params] = useRoute('/courses/:courseId/lessons/:lessonId');
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const { data: course, isLoading } = useQuery({
     queryKey: ['/api/courses', params?.courseId],
@@ -19,6 +23,23 @@ export default function LessonDetail() {
       const res = await fetch(`/api/courses/${params?.courseId}`);
       return res.json();
     },
+  });
+
+  const { data: completions = [] } = useQuery({
+    queryKey: ['/api/completions'],
+    queryFn: async () => {
+      if (globalThis.__supabaseInitPromise) {
+        await globalThis.__supabaseInitPromise;
+      }
+      const client = (globalThis as any).__supabaseClient;
+      const { data } = await client?.auth.getSession();
+      const token = data?.session?.access_token || '';
+      const res = await fetch('/api/completions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.json();
+    },
+    enabled: !!user,
   });
 
   if (isLoading || !course) {
@@ -77,6 +98,13 @@ export default function LessonDetail() {
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold mb-4">{t('lesson.topics')}</h2>
             {lesson.topics.map((topic: any) => {
+              const totalActivities = (topic.activities || []).length;
+              const safeCompletions = Array.isArray(completions) ? completions : [];
+              const completedSet = new Set(safeCompletions.map((c: any) => c.activityId));
+              const completedCount = (topic.activities || []).filter((a: any) => completedSet.has(a.id)).length;
+              const progressPercent = totalActivities > 0 ? Math.round((completedCount / totalActivities) * 100) : 0;
+              const completedLabel = t('common.completed');
+              const completedText = completedLabel === 'common.completed' ? 'completadas' : completedLabel;
               return (
                 <Card
                   key={topic.id}
@@ -93,6 +121,15 @@ export default function LessonDetail() {
                       {topic.activities.length} actividades
                     </p>
                   </CardHeader>
+                  {user && (
+                    <CardContent>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground">{completedCount} / {totalActivities} {completedText}</span>
+                        <span className="text-sm font-medium">{progressPercent}%</span>
+                      </div>
+                      <Progress value={progressPercent} className="h-2" />
+                    </CardContent>
+                  )}
                 </Card>
               );
             })}
@@ -101,6 +138,21 @@ export default function LessonDetail() {
       </main>
 
       <Footer />
+      {(() => {
+        const key = `lesson.${params?.lessonId}`;
+        if (hasOnboardingSeen(key)) return null;
+        const steps = [
+          { id: 'choose-topic', title: 'Elige un tema para empezar', description: 'Abre un tema y sigue los pasos: video → tarjetas → conversación.' },
+        ];
+        return (
+          <OnboardingCoach
+            steps={steps}
+            activeIndex={0}
+            onNext={() => markOnboardingSeen(key)}
+            onSkip={() => markOnboardingSeen(key)}
+          />
+        );
+      })()}
     </div>
   );
 }

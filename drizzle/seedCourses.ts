@@ -5,8 +5,9 @@ async function seedCourses() {
   console.log("🌱 Sembrando datos de cursos...");
 
   try {
+    const database = db!;
     // Crear curso
-    const [course1] = await db
+    const [course1] = await database
       .insert(schema.courses)
       .values({
         title: "Fundamentos de Inglés 1",
@@ -20,7 +21,7 @@ async function seedCourses() {
     // ========================================
     // LECCIÓN 1 - SIN NOMBRE (solo "Lección 1")
     // ========================================
-    const [lesson1] = await db
+    const [lesson1] = await database
       .insert(schema.lessons)
       .values({
         courseId: course1.id,
@@ -38,7 +39,7 @@ async function seedCourses() {
     // ========================================
 
     // Tema 1: Presentaciones
-    const [topic1] = await db
+    const [topic1] = await database
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
@@ -48,7 +49,7 @@ async function seedCourses() {
       .returning();
 
     // Tema 2: Preguntas Comunes
-    const [topic2] = await db
+    const [topic2] = await database
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
@@ -59,7 +60,7 @@ async function seedCourses() {
       .returning();
 
     // Tema 3: Números/*
-    const [topic3] = await db
+    const [topic3] = await database
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
@@ -69,7 +70,7 @@ async function seedCourses() {
       .returning();
 
     // Tema 4: Pronunciación
-    const [topic4] = await db
+    const [topic4] = await database
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
@@ -79,7 +80,7 @@ async function seedCourses() {
       .returning();
 
     // Tema 5: Cognados
-    const [topic5] = await db
+    const [topic5] = await database
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
@@ -89,7 +90,7 @@ async function seedCourses() {
       .returning();
 
     // Tema 6: Despedidas
-    const [topic6] = await db
+    const [topic6] = await database
       .insert(schema.topics)
       .values({
         lessonId: lesson1.id,
@@ -105,7 +106,7 @@ async function seedCourses() {
     // ========================================
 
     // Actividades para Tema 1: Presentaciones
-    await db.insert(schema.activities).values([
+    await database.insert(schema.activities).values([
       {
         topicId: topic1.id,
         type: "video",
@@ -124,7 +125,7 @@ async function seedCourses() {
     ]);
 
     // Actividades para Tema 2: Preguntas Comunes
-    await db.insert(schema.activities).values([
+    await database.insert(schema.activities).values([
       {
         topicId: topic2.id,
         type: "video",
@@ -142,7 +143,7 @@ async function seedCourses() {
     ]);
 
     // Actividades para Tema 3: Números
-    await db.insert(schema.activities).values([
+    await database.insert(schema.activities).values([
       {
         topicId: topic3.id,
         type: "video",
@@ -161,7 +162,7 @@ async function seedCourses() {
     ]);
 
     // Actividades para Tema 4: Pronunciación
-    await db.insert(schema.activities).values([
+    await database.insert(schema.activities).values([
       {
         topicId: topic4.id,
         type: "video",
@@ -180,7 +181,7 @@ async function seedCourses() {
     ]);
 
     // Actividades para Tema 5: Cognados
-    await db.insert(schema.activities).values([
+    await database.insert(schema.activities).values([
       {
         topicId: topic5.id,
         type: "video",
@@ -199,7 +200,7 @@ async function seedCourses() {
     ]);
 
     // Actividades para Tema 6: Despedidas
-    await db.insert(schema.activities).values([
+    await database.insert(schema.activities).values([
       {
         topicId: topic6.id,
         type: "video",

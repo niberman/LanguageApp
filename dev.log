@@ -1,0 +1,14 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Supabase configured: https://mytdwuuzzbmxftpwofsa.supabase.co
+9:13:32 AM [express] port 5000 in use, trying 5001
+9:13:32 AM [express] port 5001 in use, trying 5002
+9:13:32 AM [express] port 5002 in use, trying 5003
+9:13:32 AM [express] serving on port 5003
+9:13:32 AM [express] serving on port 5003
+9:13:32 AM [express] serving on port 5003
+9:13:32 AM [express] serving on port 5003
+9:13:41 AM [express] GET /api/courses 200 in 2ms :: [{"id":"dev-course-1","title":"Fundamentos de In…
+9:13:41 AM [express] GET /api/config 200 in 0ms :: {"supabaseUrl":"https://mytdwuuzzbmxftpwofsa.supa…

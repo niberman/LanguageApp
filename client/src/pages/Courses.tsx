@@ -1,17 +1,38 @@
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { BookOpen } from 'lucide-react';
 
 export default function Courses() {
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const { data: courses = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/courses'],
+  });
+
+  const { data: completions = [] } = useQuery({
+    queryKey: ['/api/completions'],
+    queryFn: async () => {
+      // Reuse Supabase singleton token if available (same approach as TopicDetail)
+      if (globalThis.__supabaseInitPromise) {
+        await globalThis.__supabaseInitPromise;
+      }
+      const client = (globalThis as any).__supabaseClient;
+      const { data } = await client?.auth.getSession();
+      const token = data?.session?.access_token || '';
+      const res = await fetch('/api/completions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.json();
+    },
+    enabled: !!user,
   });
 
   return (
@@ -41,26 +62,46 @@ export default function Courses() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {courses.map((course: any) => (
-                <Card
-                  key={course.id}
-                  className="hover-elevate active-elevate-2 cursor-pointer"
-                  onClick={() => setLocation(`/courses/${course.id}`)}
-                  data-testid={`card-course-${course.id}`}
-                >
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <BookOpen className="h-6 w-6 text-primary" />
-                      <div>
-                        <CardTitle>{course.title}</CardTitle>
-                        <CardDescription className="mt-2">
-                          {course.description}
-                        </CardDescription>
+              {courses.map((course: any) => {
+                const allActivities = (course.lessons || []).flatMap((l: any) => (l.topics || []).flatMap((t: any) => t.activities || []));
+                const totalActivities = allActivities.length;
+                const safeCompletions = Array.isArray(completions) ? completions : [];
+                const completedSet = new Set(safeCompletions.map((c: any) => c.activityId));
+                const completedCount = allActivities.filter((a: any) => completedSet.has(a.id)).length;
+                const progressPercent = totalActivities > 0 ? Math.round((completedCount / totalActivities) * 100) : 0;
+                const completedLabel = t('common.completed');
+                const completedText = completedLabel === 'common.completed' ? 'completadas' : completedLabel;
+
+                return (
+                  <Card
+                    key={course.id}
+                    className="hover-elevate active-elevate-2 cursor-pointer"
+                    onClick={() => setLocation(`/courses/${course.id}`)}
+                    data-testid={`card-course-${course.id}`}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <BookOpen className="h-6 w-6 text-primary" />
+                        <div>
+                          <CardTitle>{course.title}</CardTitle>
+                          <CardDescription className="mt-2">
+                            {course.description}
+                          </CardDescription>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
+                    </CardHeader>
+                    {user && (
+                      <CardContent>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-muted-foreground">{completedCount} / {totalActivities} {completedText}</span>
+                          <span className="text-sm font-medium">{progressPercent}%</span>
+                        </div>
+                        <Progress value={progressPercent} className="h-2" />
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>

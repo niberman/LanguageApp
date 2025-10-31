@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage, db } from "./storage";
 import { supabaseAdmin, getSupabaseClient } from "./lib/supabase";
 import { insertWaitlistEmailSchema } from "@shared/schema";
+import { generateAIReply } from "./lib/ai";
 import * as schema from "@shared/schema";
 import { desc } from "drizzle-orm";
 import { z } from "zod";
@@ -41,10 +42,59 @@ async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Dev fallback data (used when DATABASE_URL is not configured)
+  function getDevCoursesList() {
+    return [
+      {
+        id: 'dev-course-1',
+        title: 'Fundamentos de Inglés 1',
+        description:
+          'Curso introductorio de inglés que cubre saludos, presentaciones y vocabulario esencial',
+      },
+    ];
+  }
+
+  function getDevCourseWithContent(courseId: string) {
+    if (courseId !== 'dev-course-1') return null;
+    return {
+      id: 'dev-course-1',
+      title: 'Fundamentos de Inglés 1',
+      description:
+        'Curso introductorio de inglés que cubre saludos, presentaciones y vocabulario esencial',
+      lessons: [
+        {
+          id: 'dev-lesson-1',
+          title: 'Lección 1',
+          order: 1,
+          topics: [
+            {
+              id: 'dev-topic-1',
+              title: 'Presentaciones',
+              summary: 'Aprende a presentarte y conocer a otras personas en inglés',
+              activities: [
+                { id: 'dev-act-1', type: 'video', data: { videoUrl: 'https://www.youtube.com/watch?v=g9BERd6yRLI&t=1483s' } },
+                { id: 'dev-act-2', type: 'quizlet', data: { embedUrl: 'https://quizlet.com/509361526/flashcards/embed?i=nd4dc&x=1jj1&locale=es' } },
+              ],
+            },
+            {
+              id: 'dev-topic-2',
+              title: 'Preguntas Comunes',
+              summary: 'Domina las preguntas más frecuentes en conversaciones básicas',
+              activities: [
+                { id: 'dev-act-3', type: 'video', data: { videoUrl: 'https://www.youtube.com/watch?v=F_uXNeQd0Ok' } },
+                { id: 'dev-act-4', type: 'quizlet', data: { embedUrl: 'https://quizlet.com/1098715669/match/embed?i=nd4dc&x=1jj1' } },
+              ],
+            },
+          ],
+        },
+      ],
+    } as any;
+  }
+
   // Config endpoint for client
   app.get("/api/config", (req, res) => {
-    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mytdwuuzzbmxftpwofsa.supabase.co';
+    let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGR3dXV6emJteGZ0cHdvZnNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMTgyOTQsImV4cCI6MjA3NTY5NDI5NH0.Qhz2gXC1Ic_-mJsYtKv5H35r0oLW1JbBKwlWvdUi6eM';
     
     // Auto-detect and fix swapped values
     if (supabaseUrl.startsWith('eyJ') && supabaseAnonKey.startsWith('http')) {
@@ -155,6 +205,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Course routes (NEW OOP MODEL)
   app.get("/api/courses", async (req, res) => {
     try {
+      // Graceful fallback if DB is not configured in development
+      if (!process.env.DATABASE_URL) {
+        return res.json(getDevCoursesList());
+      }
       const courses = await storage.getAllCourses();
       res.json(courses);
     } catch (error: any) {
@@ -165,6 +219,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/courses/:id", async (req, res) => {
     try {
+      // Graceful fallback if DB is not configured in development
+      if (!process.env.DATABASE_URL) {
+        const devCourse = getDevCourseWithContent(req.params.id);
+        if (!devCourse) return res.status(404).json({ error: 'Course not found' });
+        return res.json(devCourse);
+      }
       const course = await storage.getCourseWithContent(req.params.id);
       
       if (!course) {
@@ -330,6 +390,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI chat endpoint
+  app.post("/api/ai/chat", authenticateUser, async (req: AuthRequest, res) => {
+    try {
+      const { messages, context } = req.body || {};
+      if (!Array.isArray(messages)) {
+        return res.status(400).json({ error: "messages must be an array" });
+      }
+
+      const safeContext = {
+        courseTitle: context?.courseTitle || null,
+        lessonTitle: context?.lessonTitle || null,
+        topicTitle: context?.topicTitle || null,
+        activityType: context?.activityType || null,
+        promptSet: Array.isArray(context?.promptSet) ? context.promptSet.slice(0, 10) : [],
+        userId: req.user?.id,
+      };
+
+      const reply = await generateAIReply(messages, safeContext);
+      res.json({ message: reply });
+    } catch (error: any) {
+      console.error("AI chat error:", error);
+      res.status(500).json({ error: error.message || "AI error" });
+    }
+  });
+
   // Get user's next topic (continue learning)
   app.get("/api/dashboard/next-topic", authenticateUser, async (req: AuthRequest, res) => {
     try {
@@ -426,11 +511,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin analytics endpoint - Get all user data (PROTECTED)
   app.get("/api/admin/analytics", authenticateUser, requireAdmin, async (req: AuthRequest, res) => {
     try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({
+          users: [],
+          platformStats: {
+            totalUsers: 0,
+            activeUsers: 0,
+            totalCompletions: 0,
+            avgCompletionsPerUser: 0,
+          },
+        });
+      }
+      const database = db!;
       // Get all profiles
-      const profiles = await db.select().from(schema.profiles);
+      const profiles = await database.select().from(schema.profiles);
       
       // Get all activity completions with user info
-      const allCompletions = await db
+      const allCompletions = await database
         .select()
         .from(schema.activityCompletions)
         .orderBy(desc(schema.activityCompletions.completedAt));

@@ -18,6 +18,10 @@ import { Progress } from "@/components/ui/progress";
 import EmbedFrame from "@/components/EmbedFrame";
 import ActivitySteps from "@/components/ActivitySteps";
 import { queryClient } from "@/lib/queryClient";
+import OnboardingCoach from "@/components/OnboardingCoach";
+import { hasOnboardingSeen, markOnboardingSeen } from "@/lib/onboarding";
+import ConversationPartner from "@/components/ConversationPartner";
+import { useEffect, useState } from "react";
 
 export default function TopicDetail() {
   const [, params] = useRoute(
@@ -111,12 +115,13 @@ export default function TopicDetail() {
   }
 
   // Activities are already sorted by backend (video → quizlet → aiChat)
-  // No need to sort again on frontend
   const sortedActivities = topic.activities;
+  const firstVideo = sortedActivities.find((a: any) => a.type === "video");
+  const hasQuizlet = sortedActivities.some((a: any) => a.type === "quizlet");
 
   // Create a Set of completed activity IDs for quick lookup
   const completedActivityIds = new Set(
-    completions.map((c: any) => c.activityId)
+    (Array.isArray(completions) ? completions : []).map((c: any) => c.activityId)
   );
 
   // Create steps for the ActivitySteps component
@@ -130,6 +135,16 @@ export default function TopicDetail() {
   // Find the first incomplete step (current step)
   const currentStepIndex = steps.findIndex((step: any) => !step.isCompleted);
   const activeStepIndex = currentStepIndex === -1 ? steps.length - 1 : currentStepIndex;
+
+  // Onboarding coach local navigation state so "Siguiente" advances
+  const [coachIndex, setCoachIndex] = useState<number | null>(null);
+  useEffect(() => {
+    if (coachIndex === null) return;
+    // Clamp to bounds if underlying steps change
+    if (coachIndex > steps.length - 1) {
+      setCoachIndex(steps.length - 1);
+    }
+  }, [coachIndex, steps.length]);
 
   // Calculate completion percentage
   const completedCount = steps.filter((step: any) => step.isCompleted).length;
@@ -191,115 +206,85 @@ export default function TopicDetail() {
           <ActivitySteps steps={steps} currentStepIndex={activeStepIndex} />
 
           <div className="space-y-6">
-            {sortedActivities.map((activity: any) => {
-              if (activity.type === "video") {
-                // Extract video ID from various YouTube URL formats
-                let videoId = "";
-                let timestamp = "";
-                
-                // Handle embed URLs: https://www.youtube.com/embed/VIDEO_ID
-                if (activity.videoUrl.includes('/embed/')) {
-                  const embedMatch = activity.videoUrl.match(/\/embed\/([^?&]+)/);
-                  videoId = embedMatch?.[1] || "";
-                }
-                // Handle watch URLs: https://www.youtube.com/watch?v=VIDEO_ID
-                else if (activity.videoUrl.includes('watch?v=')) {
-                  const watchMatch = activity.videoUrl.match(/watch\?v=([^&]+)/);
-                  videoId = watchMatch?.[1] || "";
-                }
-                // Handle short URLs: https://youtu.be/VIDEO_ID
-                else if (activity.videoUrl.includes('youtu.be/')) {
-                  const shortMatch = activity.videoUrl.match(/youtu\.be\/([^?&]+)/);
-                  videoId = shortMatch?.[1] || "";
-                }
-                
-                // Extract timestamp if present
-                const timestampMatch = activity.videoUrl.match(/[?&]t=(\d+)/);
-                timestamp = timestampMatch?.[1] || "";
-
-                const embedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ""}`;
-                const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-                return (
-                  <EmbedFrame
-                    key={activity.id}
-                    type="youtube"
-                    embedUrl={embedUrl}
-                    externalUrl={watchUrl}
-                    title="Ver lección en video"
-                    onInteraction={() => {}}
-                    isCompleted={completedActivityIds.has(activity.id)}
-                    onComplete={() => handleActivityComplete(activity.id)}
-                  />
-                );
+            {firstVideo && (() => {
+              const src = typeof (firstVideo as any).videoUrl === 'string' ? (firstVideo as any).videoUrl : "";
+              if (!src) return null;
+              let videoId = "";
+              let timestamp = "";
+              if (src.includes('/embed/')) {
+                const embedMatch = src.match(/\/embed\/([^?&]+)/);
+                videoId = embedMatch?.[1] || "";
+              } else if (src.includes('watch?v=')) {
+                const watchMatch = src.match(/watch\?v=([^&]+)/);
+                videoId = watchMatch?.[1] || "";
+              } else if (src.includes('youtu.be/')) {
+                const shortMatch = src.match(/youtu\.be\/([^?&]+)/);
+                videoId = shortMatch?.[1] || "";
               }
+              const timestampMatch = src.match(/[?&]t=(\d+)/);
+              timestamp = timestampMatch?.[1] || "";
+              const embedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ""}`;
+              const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+              return (
+                <EmbedFrame
+                  key={firstVideo.id}
+                  type="youtube"
+                  embedUrl={embedUrl}
+                  externalUrl={watchUrl}
+                  title="Ver lección en video"
+                  onInteraction={() => {}}
+                  isCompleted={completedActivityIds.has(firstVideo.id)}
+                  onComplete={() => {
+                    handleActivityComplete(firstVideo.id);
+                    if (hasQuizlet) {
+                      setLocation(
+                        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
+                      );
+                    }
+                  }}
+                />
+              );
+            })()}
 
-              if (activity.type === "quizlet") {
-                return (
-                  <EmbedFrame
-                    key={activity.id}
-                    type="quizlet"
-                    embedUrl={activity.embedUrl}
-                    externalUrl={activity.embedUrl.replace('/embed', '').split('?')[0]}
-                    title="Practicar con Quizlet"
-                    onInteraction={() => {}}
-                    isCompleted={completedActivityIds.has(activity.id)}
-                    onComplete={() => handleActivityComplete(activity.id)}
-                  />
-                );
-              }
-
-              if (activity.type === "aiChat") {
-                return (
-                  <Card
-                    key={activity.id}
-                    data-testid={`card-activity-${activity.id}`}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <MessageSquare className="h-6 w-6 text-primary" />
-                        <CardTitle>Práctica de conversación IA</CardTitle>
-                      </div>
-                      <CardDescription>
-                        Practica conversación con asistente IA
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Practica estas frases:
-                        </p>
-                        <ul className="list-disc list-inside space-y-1">
-                          {activity.promptSet.map(
-                            (prompt: string, idx: number) => (
-                              <li key={idx} className="text-sm">
-                                {prompt}
-                              </li>
-                            ),
-                          )}
-                        </ul>
-                        <Button
-                          className="mt-4"
-                          onClick={() => {
-                            handleActivityComplete(activity.id);
-                            toast({
-                              title: "¡Próximamente!",
-                              description:
-                                "La función de chat IA estará disponible pronto",
-                            });
-                          }}
-                          data-testid={`button-start-chat-${activity.id}`}
-                        >
-                          Iniciar práctica de conversación
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              }
-
-              return null;
-            })}
+            {(() => {
+              const ai = sortedActivities.find((a: any) => a.type === "aiChat");
+              if (!ai) return null;
+              return (
+                <Card key={ai.id} data-testid={`card-activity-${ai.id}`}>
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="h-6 w-6 text-primary" />
+                      <CardTitle>Práctica de conversación IA</CardTitle>
+                    </div>
+                    <CardDescription>
+                      Practica conversación con asistente IA
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {Array.isArray(ai.promptSet) && ai.promptSet.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Frases sugeridas:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            {ai.promptSet.map((prompt: string, idx: number) => (
+                              <li key={idx} className="text-sm">{prompt}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <ConversationPartner
+                        courseTitle={course.title}
+                        lessonTitle={lesson.title}
+                        topicTitle={topic.title}
+                        activityType="aiChat"
+                        promptSet={ai.promptSet}
+                        onComplete={() => handleActivityComplete(ai.id)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
           </div>
 
           {/* Progress and Navigation */}
@@ -371,6 +356,47 @@ export default function TopicDetail() {
       </main>
 
       <Footer />
+      {(() => {
+        const key = `topic.${params?.topicId}`;
+        const video = sortedActivities.find((a: any) => a.type === "video");
+        const hasAi = sortedActivities.some((a: any) => a.type === "aiChat");
+        const stepsForCoach = [
+          video && { id: "video", title: "1) Mira el video", description: "Empieza reproduciendo el video para entender el tema." },
+          hasQuizlet && { id: "quizlet", title: "2) Practica con tarjetas", description: "Después del video, practica con Quizlet para memorizar vocabulario." },
+          hasAi && { id: "ai", title: "3) Conversa con IA", description: "Refuerza hablando con el asistente IA usando las frases del tema." },
+          { id: "continue", title: "4) Continúa al siguiente tema", description: "Cuando completes todas las actividades, avanza al siguiente tema." },
+        ].filter(Boolean) as { id: string; title: string; description: string }[];
+
+        const completedMap: Record<string, boolean> = {
+          video: video ? completedActivityIds.has(video.id) : true,
+          quizlet: hasQuizlet ? sortedActivities.filter((a: any) => a.type === "quizlet").every((a: any) => completedActivityIds.has(a.id)) : true,
+          ai: hasAi ? sortedActivities.filter((a: any) => a.type === "aiChat").every((a: any) => completedActivityIds.has(a.id)) : true,
+          continue: isTopicComplete,
+        };
+
+        const firstIncompleteIndex = stepsForCoach.findIndex((s) => !completedMap[s.id]);
+        const computedIndex = firstIncompleteIndex === -1 ? stepsForCoach.length - 1 : firstIncompleteIndex;
+        const activeIndex = coachIndex ?? computedIndex;
+
+        if (hasOnboardingSeen(key) || stepsForCoach.length === 0) return null;
+
+        return (
+          <OnboardingCoach
+            steps={stepsForCoach}
+            activeIndex={activeIndex}
+            onNext={() => {
+              if (activeIndex >= stepsForCoach.length - 1) {
+                markOnboardingSeen(key);
+              } else {
+                setCoachIndex((activeIndex + 1));
+              }
+            }}
+            onSkip={() => {
+              markOnboardingSeen(key);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

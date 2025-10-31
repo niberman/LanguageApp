@@ -10,11 +10,10 @@ interface EmbedFrameProps {
   onInteraction: () => void;
   isCompleted?: boolean;
   onComplete: () => void;
-  onNavigateNext?: () => void;
   nextButtonText?: string;
 }
 
-export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInteraction, isCompleted = false, onComplete, onNavigateNext, nextButtonText = "Continuar" }: EmbedFrameProps) {
+export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInteraction, isCompleted = false, onComplete, nextButtonText = "Continuar" }: EmbedFrameProps) {
   const handleOpenExternal = () => {
     onInteraction();
     window.open(externalUrl || embedUrl, '_blank');
@@ -73,13 +72,7 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
           </Button>
         )}
         <Button
-          onClick={() => {
-            if (isCompleted && onNavigateNext) {
-              onNavigateNext();
-            } else {
-              onComplete();
-            }
-          }}
+          onClick={onComplete}
           data-testid="button-complete"
           variant={isCompleted ? "secondary" : "default"}
           className="flex-1 sm:flex-none"

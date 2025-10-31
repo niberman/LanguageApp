@@ -5,43 +5,47 @@
 
 ## Recent Changes
 
-### ✅ Seamless Activity Navigation - "Completado" Buttons Now Navigate (October 31, 2025)
-**Fixed critical UX issue where completed activities blocked progression:**
+### ✅ Simplified Progressive Learning Flow (October 31, 2025)
+**Completely redesigned UI for maximum simplicity and progressive learning:**
 
-- **Smart Navigation Buttons** (Flow Continuity):
-  - Removed disabled state from completed activities - buttons now actively navigate
-  - Video completed: Button changes from "Completar y continuar" → "Ir a tarjetas"
-  - Flashcards completed: Button changes to "Volver al tema"
-  - Users can revisit activities and continue learning without getting stuck
-  
-- **EmbedFrame Component Enhancement**:
-  - Added `onNavigateNext` prop for post-completion navigation
-  - Added `nextButtonText` prop for custom button labels
-  - Button behavior: Not completed → Complete + Navigate, Already completed → Navigate only
-  - Improved UX: Clear calls-to-action that adapt to completion state
+- **Dramatic UI Simplification**:
+  - Removed: OnboardingCoach popups, ActivitySteps indicators, bottom progress cards, duplicate navigation elements
+  - Result: Clean, distraction-free interface with just title + activity + one button
+  - Each page now has ONE clear call-to-action
 
-- **Complete Learning Flow**:
-  - Video → Click "Completar y continuar" → Navigate to flashcards automatically
-  - Flashcards → Click "Completar y continuar" → Navigate back to topic automatically
-  - Completed video → Click "Ir a tarjetas" → Revisit flashcards anytime
-  - Completed flashcards → Click "Volver al tema" → Return to topic anytime
-  - Smooth progression through all 6 learning topics
+- **True Progressive Flow** (Video → Flashcards → Next Topic):
+  - Old flow: Video → Flashcards → Back to same topic → Stuck
+  - New flow: Video → Flashcards → **Next Topic Video** → Continues...
+  - Flashcards now navigate to NEXT topic instead of back to current topic
+  - Creates seamless learning progression through all topics
 
-- **Database Verification**:
-  - Confirmed all 6 topics have Quizlet flashcard activities with valid embed URLs
-  - Topics: "¿Cómo te llamas?", "Cómo decir 'Soy de…'", "¿Te gusta viajar?", "¿Trabajas?", "¿Te gusta?", "Saludos"
+- **Async/Await Race Condition Fix**:
+  - Changed from `completeActivity.mutate()` (fire-and-forget) to `await completeActivity.mutateAsync()`
+  - Navigation only happens AFTER database save succeeds
+  - Added error handling - if save fails, user stays on page with error toast
+  - Prevents progress loss and ensures UI consistency
 
-- **Testing**: End-to-end flow test passed
-  - Video completion navigates to flashcards ✅
-  - Flashcard completion navigates back to topic ✅
-  - Progress tracking shows "2 de 2 completadas" ✅
-  - Completed buttons remain clickable and navigate correctly ✅
-  - Next topic navigation works when all activities complete ✅
+- **Smart Button Behavior**:
+  - Not completed: "Completar y continuar" → Await mutation + Navigate
+  - Already completed: "Continuar" (or "Siguiente: [next topic]") → Navigate immediately
+  - Single `onComplete` handler checks completion state internally
+  - No separate navigation callbacks that could bypass async/await
+
+- **Barrier-Free Access**:
+  - Removed video completion gate from flashcards page
+  - Users can access any activity without forced prerequisites
+  - Aligns with "treat users like 5 year olds" - maximum simplicity
+
+- **E2E Testing**: Progressive flow confirmed
+  - Video → Click button → Navigate to flashcards ✅
+  - Flashcards → Click button → Navigate to NEXT topic ✅
+  - No race conditions or stale data ✅
+  - No popups or redundant UI ✅
 
 - **Files Modified**:
-  - `client/src/components/EmbedFrame.tsx` - Smart navigation button logic
-  - `client/src/pages/TopicDetail.tsx` - Video-to-flashcards navigation
-  - `client/src/pages/TopicFlashcards.tsx` - Flashcards-to-topic navigation
+  - `client/src/components/EmbedFrame.tsx` - Removed `onNavigateNext` prop, simplified button logic
+  - `client/src/pages/TopicDetail.tsx` - Removed popups/progress/steps, async/await pattern
+  - `client/src/pages/TopicFlashcards.tsx` - Removed popups/steps/gate, navigate to next topic, async/await
 
 ### ✅ Enhanced Learning Experience - Auth Gates, Step Prompts & Progress (October 29, 2025)
 **Implemented three user-requested features to maximize simplicity and learning continuity:**

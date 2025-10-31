@@ -15,7 +15,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import EmbedFrame from "@/components/EmbedFrame";
 import { queryClient } from "@/lib/queryClient";
-import { useState, useEffect } from "react";
 
 export default function TopicFlashcards() {
   const [, params] = useRoute(
@@ -105,27 +104,13 @@ export default function TopicFlashcards() {
 
   const activityList = topic.activities as any[];
   const completedIds = new Set((Array.isArray(completions) ? completions : []).map((c: any) => c.activityId));
-  const videoActivity = activityList.find((a) => a.type === "video");
   const quizletActivities = activityList.filter((a) => a.type === "quizlet");
-
-  // Gate: require video completed (using useEffect to avoid setState during render)
-  useEffect(() => {
-    if (videoActivity && !completedIds.has(videoActivity.id)) {
-      toast({
-        title: "Mira el video primero",
-        description: "Debes completar el video antes de practicar con tarjetas",
-      });
-      setLocation(
-        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
-      );
-    }
-  }, [videoActivity, completedIds, params, toast, setLocation]);
 
   // Find next topic for navigation after completing flashcards
   const currentTopicIndex = lesson.topics.findIndex((t: any) => t.id === params?.topicId);
   const nextTopic = currentTopicIndex < lesson.topics.length - 1 ? lesson.topics[currentTopicIndex + 1] : null;
 
-  const handleFlashcardComplete = (activityId: string) => {
+  const handleFlashcardComplete = async (activityId: string) => {
     if (!user) {
       toast({
         title: "Por favor inicia sesión",
@@ -135,22 +120,30 @@ export default function TopicFlashcards() {
       return;
     }
     
-    completeActivity.mutate(activityId);
-    toast({
-      title: "¡Progreso guardado!",
-      description: "Actividad marcada como completada",
-    });
+    try {
+      await completeActivity.mutateAsync(activityId);
+      toast({
+        title: "¡Progreso guardado!",
+        description: "Actividad marcada como completada",
+      });
 
-    // Navigate to next topic after completion
-    if (nextTopic) {
-      setLocation(
-        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
-      );
-    } else {
-      // No more topics, go back to lesson
-      setLocation(
-        `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
-      );
+      // Navigate to next topic after completion is saved
+      if (nextTopic) {
+        setLocation(
+          `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`,
+        );
+      } else {
+        // No more topics, go back to lesson
+        setLocation(
+          `/courses/${params?.courseId}/lessons/${params?.lessonId}`,
+        );
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el progreso. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -200,20 +193,30 @@ export default function TopicFlashcards() {
                 </CardHeader>
               </Card>
             )}
-            {quizletActivities.map((activity: any) => (
-              <EmbedFrame
-                key={activity.id}
-                type="quizlet"
-                embedUrl={activity.embedUrl}
-                externalUrl={activity.embedUrl.replace('/embed', '').split('?')[0]}
-                title="Practicar con Quizlet"
-                onInteraction={() => {}}
-                isCompleted={completedIds.has(activity.id)}
-                onComplete={() => handleFlashcardComplete(activity.id)}
-                onNavigateNext={handleNavigateNext}
-                nextButtonText={nextTopic ? `Siguiente: ${nextTopic.title}` : "Volver a la lección"}
-              />
-            ))}
+            {quizletActivities.map((activity: any) => {
+              const isCompleted = completedIds.has(activity.id);
+              return (
+                <EmbedFrame
+                  key={activity.id}
+                  type="quizlet"
+                  embedUrl={activity.embedUrl}
+                  externalUrl={activity.embedUrl.replace('/embed', '').split('?')[0]}
+                  title="Practicar con Quizlet"
+                  onInteraction={() => {}}
+                  isCompleted={isCompleted}
+                  onComplete={() => {
+                    // If already completed, just navigate without mutation
+                    if (isCompleted) {
+                      handleNavigateNext();
+                    } else {
+                      // Not completed - await mutation then navigate
+                      handleFlashcardComplete(activity.id);
+                    }
+                  }}
+                  nextButtonText={nextTopic ? `Siguiente: ${nextTopic.title}` : "Volver a la lección"}
+                />
+              );
+            })}
           </div>
         </div>
       </main>

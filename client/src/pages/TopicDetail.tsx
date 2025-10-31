@@ -111,7 +111,7 @@ export default function TopicDetail() {
 
   const isVideoCompleted = firstVideo && completedActivityIds.has(firstVideo.id);
 
-  const handleActivityComplete = (activityId: string) => {
+  const handleActivityComplete = async (activityId: string, navigateAfter?: () => void) => {
     if (!user) {
       toast({
         title: "Por favor inicia sesión",
@@ -120,11 +120,23 @@ export default function TopicDetail() {
       setLocation("/auth");
       return;
     }
-    completeActivity.mutate(activityId);
-    toast({
-      title: "¡Progreso guardado!",
-      description: "Actividad marcada como completada",
-    });
+    
+    try {
+      await completeActivity.mutateAsync(activityId);
+      toast({
+        title: "¡Progreso guardado!",
+        description: "Actividad marcada como completada",
+      });
+      if (navigateAfter) {
+        navigateAfter();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el progreso. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -188,21 +200,18 @@ export default function TopicDetail() {
                   onInteraction={() => {}}
                   isCompleted={isVideoCompleted}
                   onComplete={() => {
-                    handleActivityComplete(firstVideo.id);
-                    if (hasQuizlet) {
-                      setLocation(
-                        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
-                      );
+                    const navigateTo = hasQuizlet 
+                      ? `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`
+                      : null;
+                    
+                    // If already completed, just navigate without mutation
+                    if (isVideoCompleted && navigateTo) {
+                      setLocation(navigateTo);
+                    } else if (!isVideoCompleted) {
+                      // Not completed - await mutation then navigate
+                      handleActivityComplete(firstVideo.id, navigateTo ? () => setLocation(navigateTo) : undefined);
                     }
                   }}
-                  onNavigateNext={
-                    hasQuizlet
-                      ? () =>
-                          setLocation(
-                            `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
-                          )
-                      : undefined
-                  }
                   nextButtonText="Continuar"
                 />
               </div>

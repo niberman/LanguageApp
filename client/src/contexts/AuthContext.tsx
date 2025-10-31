@@ -89,43 +89,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const client = supabaseRef.current || await getSupabase();
-    
-    const { data, error } = await client.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        data: {
-          display_name: email.split('@')[0],
-        }
-      }
+    // Call backend signup endpoint which creates user AND profile
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
     });
+    
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to sign up');
+    }
+    
+    // Now sign in to get the session
+    const client = supabaseRef.current || await getSupabase();
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     
-    // Update state immediately
+    // Update state
     if (data.session) {
       setSession(data.session);
       setUser(data.session.user);
-    }
-    
-    // Create profile
-    if (data.user && data.session) {
-      try {
-        await fetch('/api/profile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${data.session.access_token}`
-          },
-          body: JSON.stringify({
-            id: data.user.id,
-            displayName: email.split('@')[0],
-            locale: 'en',
-          })
-        });
-      } catch (err) {
-        console.error('Profile creation error:', err);
-      }
     }
   };
 

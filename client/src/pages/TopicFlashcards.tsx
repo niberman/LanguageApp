@@ -195,7 +195,16 @@ export default function TopicFlashcards() {
                     title: "¡Progreso guardado!",
                     description: "Actividad marcada como completada",
                   });
+                  setLocation(
+                    `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
+                  );
                 }}
+                onNavigateNext={() =>
+                  setLocation(
+                    `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
+                  )
+                }
+                nextButtonText="Volver al tema"
               />
             ))}
             {(() => {

@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Check } from 'lucide-react';
+import { ExternalLink, Check, ChevronRight } from 'lucide-react';
 
 interface EmbedFrameProps {
   type: 'quizlet' | 'youtube';
@@ -10,9 +10,11 @@ interface EmbedFrameProps {
   onInteraction: () => void;
   isCompleted?: boolean;
   onComplete: () => void;
+  onNavigateNext?: () => void;
+  nextButtonText?: string;
 }
 
-export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInteraction, isCompleted = false, onComplete }: EmbedFrameProps) {
+export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInteraction, isCompleted = false, onComplete, onNavigateNext, nextButtonText = "Continuar" }: EmbedFrameProps) {
   const handleOpenExternal = () => {
     onInteraction();
     window.open(externalUrl || embedUrl, '_blank');
@@ -71,14 +73,25 @@ export default function EmbedFrame({ type, embedUrl, externalUrl, title, onInter
           </Button>
         )}
         <Button
-          onClick={onComplete}
-          disabled={isCompleted}
+          onClick={() => {
+            if (isCompleted && onNavigateNext) {
+              onNavigateNext();
+            } else {
+              onComplete();
+            }
+          }}
           data-testid="button-complete"
           variant={isCompleted ? "secondary" : "default"}
           className="flex-1 sm:flex-none"
         >
-          {isCompleted && <Check className="mr-2 h-4 w-4" />}
-          {isCompleted ? "Completado" : "Marcar como completada"}
+          {isCompleted ? (
+            <>
+              <ChevronRight className="mr-2 h-4 w-4" />
+              {nextButtonText}
+            </>
+          ) : (
+            "Completar y continuar"
+          )}
         </Button>
       </div>
     </Card>

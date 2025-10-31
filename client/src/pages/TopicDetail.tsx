@@ -243,22 +243,16 @@ export default function TopicDetail() {
                         );
                       }
                     }}
+                    onNavigateNext={
+                      hasQuizlet
+                        ? () =>
+                            setLocation(
+                              `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
+                            )
+                        : undefined
+                    }
+                    nextButtonText="Ir a tarjetas"
                   />
-                  {hasQuizlet && isVideoCompleted && (
-                    <div className="flex justify-center">
-                      <Button
-                        onClick={() =>
-                          setLocation(
-                            `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
-                          )
-                        }
-                        data-testid="button-go-to-flashcards"
-                        size="lg"
-                      >
-                        Ir a Paso 2: Tarjetas de vocabulario
-                      </Button>
-                    </div>
-                  )}
                 </div>
               );
             })()}

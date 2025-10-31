@@ -43,11 +43,13 @@ export default function Home() {
                 icon={BookOpen}
                 title={t('nav.practice')}
                 description={t('pricing.features.practice')}
+                href="/courses"
               />
               <FeatureCard
                 icon={LayoutDashboard}
                 title={t('nav.dashboard')}
                 description="Sigue tu progreso y mantén tu racha diaria"
+                href="/dashboard"
               />
               <FeatureCard
                 icon={Sparkles}

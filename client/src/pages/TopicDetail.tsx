@@ -225,24 +225,41 @@ export default function TopicDetail() {
               timestamp = timestampMatch?.[1] || "";
               const embedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ""}`;
               const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+              const isVideoCompleted = completedActivityIds.has(firstVideo.id);
               return (
-                <EmbedFrame
-                  key={firstVideo.id}
-                  type="youtube"
-                  embedUrl={embedUrl}
-                  externalUrl={watchUrl}
-                  title="Ver lección en video"
-                  onInteraction={() => {}}
-                  isCompleted={completedActivityIds.has(firstVideo.id)}
-                  onComplete={() => {
-                    handleActivityComplete(firstVideo.id);
-                    if (hasQuizlet) {
-                      setLocation(
-                        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
-                      );
-                    }
-                  }}
-                />
+                <div key={firstVideo.id} className="space-y-4">
+                  <EmbedFrame
+                    type="youtube"
+                    embedUrl={embedUrl}
+                    externalUrl={watchUrl}
+                    title="Ver lección en video"
+                    onInteraction={() => {}}
+                    isCompleted={isVideoCompleted}
+                    onComplete={() => {
+                      handleActivityComplete(firstVideo.id);
+                      if (hasQuizlet) {
+                        setLocation(
+                          `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
+                        );
+                      }
+                    }}
+                  />
+                  {hasQuizlet && isVideoCompleted && (
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() =>
+                          setLocation(
+                            `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`,
+                          )
+                        }
+                        data-testid="button-go-to-flashcards"
+                        size="lg"
+                      >
+                        Ir a Paso 2: Tarjetas de vocabulario
+                      </Button>
+                    </div>
+                  )}
+                </div>
               );
             })()}
 

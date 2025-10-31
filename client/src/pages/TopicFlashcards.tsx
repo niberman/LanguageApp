@@ -20,7 +20,7 @@ import { queryClient } from "@/lib/queryClient";
 import OnboardingCoach from "@/components/OnboardingCoach";
 import { hasOnboardingSeen, markOnboardingSeen } from "@/lib/onboarding";
 import ConversationPartner from "@/components/ConversationPartner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function TopicFlashcards() {
   const [, params] = useRoute(
@@ -115,17 +115,18 @@ export default function TopicFlashcards() {
   const videoActivity = activityList.find((a) => a.type === "video");
   const quizletActivities = activityList.filter((a) => a.type === "quizlet");
 
-  // Gate: require video completed
-  if (videoActivity && !completedIds.has(videoActivity.id)) {
-    toast({
-      title: "Mira el video primero",
-      description: "Debes completar el video antes de practicar con tarjetas",
-    });
-    setLocation(
-      `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
-    );
-    return null;
-  }
+  // Gate: require video completed (using useEffect to avoid setState during render)
+  useEffect(() => {
+    if (videoActivity && !completedIds.has(videoActivity.id)) {
+      toast({
+        title: "Mira el video primero",
+        description: "Debes completar el video antes de practicar con tarjetas",
+      });
+      setLocation(
+        `/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`,
+      );
+    }
+  }, [videoActivity, completedIds, params, toast, setLocation]);
 
   const steps = activityList.map((a, idx) => ({
     id: a.id,

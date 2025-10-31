@@ -385,6 +385,22 @@ export default function TopicDetail() {
             steps={stepsForCoach}
             activeIndex={activeIndex}
             onNext={() => {
+              const currentStep = stepsForCoach[activeIndex];
+              
+              // Navigate to flashcards page when clicking "Siguiente" on quizlet step
+              if (currentStep?.id === "quizlet") {
+                setLocation(`/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}/flashcards`);
+                return;
+              }
+              
+              // Navigate to next topic when clicking "Siguiente" on continue step
+              if (currentStep?.id === "continue" && isTopicComplete && nextTopic) {
+                setLocation(`/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${nextTopic.id}`);
+                markOnboardingSeen(key);
+                return;
+              }
+              
+              // Otherwise advance to next coach step
               if (activeIndex >= stepsForCoach.length - 1) {
                 markOnboardingSeen(key);
               } else {

@@ -247,6 +247,17 @@ export default function TopicFlashcards() {
             steps={stepsForCoach}
             activeIndex={activeIndex}
             onNext={() => {
+              const currentStep = stepsForCoach[activeIndex];
+              
+              // When clicking "Listo" on the "continue" step, navigate back to topic
+              if (currentStep?.id === "continue") {
+                // Navigate back to the main topic page to continue with AI chat or next topic
+                setLocation(`/courses/${params?.courseId}/lessons/${params?.lessonId}/topics/${params?.topicId}`);
+                markOnboardingSeen(key);
+                return;
+              }
+              
+              // Otherwise advance coach step
               if (activeIndex >= stepsForCoach.length - 1) {
                 markOnboardingSeen(key);
               } else {

@@ -209,8 +209,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!process.env.DATABASE_URL) {
         return res.json(getDevCoursesList());
       }
-      const courses = await storage.getAllCourses();
-      res.json(courses);
+      const basicCourses = await storage.getAllCourses();
+      
+      // Fetch full content for each course to enable progress tracking
+      const coursesWithContent = await Promise.all(
+        basicCourses.map(async (course) => {
+          const fullCourse = await storage.getCourseWithContent(course.id);
+          return fullCourse || course;
+        })
+      );
+      
+      res.json(coursesWithContent);
     } catch (error: any) {
       console.error('Get courses error:', error);
       res.status(500).json({ error: error.message });

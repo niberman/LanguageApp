@@ -136,7 +136,22 @@ export default function Auth() {
     try {
       await signUp(signUpData.email, signUpData.password);
       toast({ title: t('auth.success'), description: t('auth.accountCreatedSuccessfully') });
-      // Small delay to ensure state updates before navigation
+      
+      // Fetch the first video lesson path for new users
+      try {
+        const response = await fetch('/api/dashboard/next-topic');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.navigationPath) {
+            setTimeout(() => setLocation(data.navigationPath), 100);
+            return;
+          }
+        }
+      } catch (navError) {
+        console.error('Failed to get first lesson path:', navError);
+      }
+      
+      // Fallback to dashboard if navigation path fetch fails
       setTimeout(() => setLocation('/dashboard'), 100);
     } catch (error: any) {
       toast({ title: t('common.error'), description: error.message, variant: 'destructive' });

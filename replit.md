@@ -5,6 +5,19 @@
 
 ## Recent Changes
 
+### ✅ Direct-to-Video Registration Flow (November 4, 2025)
+**New users skip dashboard and start learning immediately:**
+
+- **Instant Learning Start**:
+  - After registration, users go directly to first video lesson ("Acerca de - Introducción al curso")
+  - Removes friction and gets users started immediately
+  - Uses smart navigation API to fetch first lesson path
+  - Fallback to dashboard if navigation fetch fails
+
+- **Files Modified**:
+  - `client/src/pages/Auth.tsx` - Updated signup redirect to use navigationPath
+  - `client/src/pages/Dashboard.tsx` - Made "Continuar Aprendiendo" button mobile-responsive
+
 ### ✅ Mobile Navigation & Clickable Feature Cards (October 31, 2025)
 **Improved mobile accessibility and home page interactivity:**
 
